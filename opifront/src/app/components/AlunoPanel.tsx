@@ -46,6 +46,7 @@ interface Project {
 interface Grupo {
   id: number;
   nome: string;
+  turmaId: number;
   membros: { nome: string; email: string; curso?: string }[];
   descricao: string;
   cor: string;
@@ -195,6 +196,7 @@ export function AlunoPanel({ onLogout, userName }: AlunoPanelProps) {
         const gruposCarregados = lista.map((g: any) => ({
           id: g.id,
           nome: g.nome,
+          turmaId: g.turma?.id || 0,
           membros: g.membros?.map((m: any) => ({ nome: m.nome, email: m.email, curso: m.curso || '' })) || [],
           descricao: g.descricao || '',
           cor: g.cor || '#003D7A'
@@ -931,7 +933,7 @@ async function iniciarChamada() {
                     className="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2 bg-white"
                     style={{ borderColor: 'var(--color-border)', color: '#003D7A' }}
                     value={formData.turma}
-                    onChange={(e) => setFormData({ ...formData, turma: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, turma: e.target.value, grupoSelecionado: 0 })}
                     required
                   >
                     <option value="">Selecione sua turma</option>
@@ -949,8 +951,10 @@ async function iniciarChamada() {
                     onChange={(e) => setFormData({ ...formData, grupoSelecionado: Number(e.target.value) })}
                     required
                   >
-                    <option value="">Selecione seu grupo</option>
-                    {grupos.map(g => (
+                    <option value="">{formData.turma ? 'Selecione seu grupo' : 'Selecione uma turma primeiro'}</option>
+                    {grupos
+                      .filter(g => !formData.turma || g.turmaId === Number(formData.turma))
+                      .map(g => (
                       <option key={g.id} value={g.id}>{g.nome}</option>
                     ))}
                   </select>
