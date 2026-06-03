@@ -96,6 +96,7 @@ export function AlunoPanel({ onLogout, userName }: AlunoPanelProps) {
     nome: '',
     email: '',
     turma: '',
+    turmas: [] as {id: number; nome: string; curso: string}[],
     curso: '',
     foto: '',
     sobreMim: '',
@@ -247,12 +248,18 @@ export function AlunoPanel({ onLogout, userName }: AlunoPanelProps) {
 
     // Carregar perfil do aluno logado
     api.meuPerfil().then((u: any) => {
+      const turmasDoAluno = (u.turmas || []).map((t: any) => ({
+        id: t.id,
+        nome: t.nome,
+        curso: getCurso(t.nome),
+      }));
       setProfile({
         id: u.id || 0,
         nome: u.nome || '',
         email: u.email || '',
         turma: u.turmas?.[0]?.nome || '',
-        curso: u.curso || '',
+        turmas: turmasDoAluno,
+        curso: u.curso || turmasDoAluno[0]?.curso || '',
         foto: u.foto_url || '',
         sobreMim: u.sobre_mim || '',
         hardSkills: Array.isArray(u.hard_skills) ? u.hard_skills : [],
@@ -1783,20 +1790,34 @@ async function iniciarChamada() {
                     </div>
                     <span className="font-medium" style={{ color: '#111' }}>{profile.email}</span>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-4 flex flex-col gap-1">
-                    <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                      <BookOpen className="w-4 h-4" />
-                      <span className="text-xs">Curso</span>
-                    </div>
-                    <span className="font-medium" style={{ color: '#111' }}>{profile.curso || '—'}</span>
-                  </div>
-                  <div className="bg-gray-50 rounded-lg p-4 flex flex-col gap-1">
-                    <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                      <Users className="w-4 h-4" />
-                      <span className="text-xs">Turma</span>
-                    </div>
-                    <span className="font-medium" style={{ color: '#111' }}>{profile.turma || '—'}</span>
-                  </div>
+                  {profile.turmas.length > 0 ? (
+                    profile.turmas.map((t, i) => (
+                      <div key={i} className="bg-gray-50 rounded-lg p-4 flex flex-col gap-1">
+                        <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                          <BookOpen className="w-4 h-4" />
+                          <span className="text-xs">{t.curso === 'Análise e Desenvolvimento de Sistemas' ? 'ADS' : t.curso}</span>
+                        </div>
+                        <span className="font-medium" style={{ color: '#111' }}>{t.nome}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <>
+                      <div className="bg-gray-50 rounded-lg p-4 flex flex-col gap-1">
+                        <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                          <BookOpen className="w-4 h-4" />
+                          <span className="text-xs">Curso</span>
+                        </div>
+                        <span className="font-medium" style={{ color: '#111' }}>{profile.curso || '—'}</span>
+                      </div>
+                      <div className="bg-gray-50 rounded-lg p-4 flex flex-col gap-1">
+                        <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                          <Users className="w-4 h-4" />
+                          <span className="text-xs">Turma</span>
+                        </div>
+                        <span className="font-medium" style={{ color: '#111' }}>{profile.turma || '—'}</span>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
