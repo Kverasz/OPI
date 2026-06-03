@@ -652,6 +652,7 @@ async function iniciarChamada() {
   };
 
   const [enviando, setEnviando] = useState(false);
+  const [imagemExpandida, setImagemExpandida] = useState<string | null>(null);
 
   const handleSendMessage = async () => {
     if (selectedGroup === null || enviando) return;
@@ -1528,26 +1529,38 @@ async function iniciarChamada() {
                                 {msg.tipo === 'ARQUIVO' && msg.arquivoUrl ? (
                                   <div>
                                     {/\.(png|jpg|jpeg|gif|webp|bmp|svg)$/i.test(msg.nomeArquivo || '') ? (
-                                      // Imagem: exibe inline com botão de download
+                                      // Imagem: exibe inline com lightbox e download por blob
                                       <div className="relative group">
                                         <img
                                           src={msg.arquivoUrl}
                                           alt={msg.nomeArquivo || 'Imagem'}
-                                          className="rounded-lg max-w-[260px] max-h-[200px] object-cover cursor-pointer"
-                                          onClick={() => window.open(msg.arquivoUrl, '_blank')}
+                                          className="rounded-lg max-w-[260px] max-h-[200px] object-cover cursor-zoom-in"
+                                          onClick={() => setImagemExpandida(msg.arquivoUrl!)}
                                         />
-                                        <a
-                                          href={msg.arquivoUrl}
-                                          download={msg.nomeArquivo}
+                                        <button
                                           className="absolute top-2 right-2 p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                                           style={{ backgroundColor: 'rgba(0,0,0,0.55)' }}
                                           title="Baixar imagem"
-                                          onClick={e => e.stopPropagation()}
+                                          onClick={async (e) => {
+                                            e.stopPropagation();
+                                            try {
+                                              const res = await fetch(msg.arquivoUrl!);
+                                              const blob = await res.blob();
+                                              const url = URL.createObjectURL(blob);
+                                              const a = document.createElement('a');
+                                              a.href = url;
+                                              a.download = msg.nomeArquivo || 'imagem';
+                                              a.click();
+                                              URL.revokeObjectURL(url);
+                                            } catch {
+                                              window.open(msg.arquivoUrl, '_blank');
+                                            }
+                                          }}
                                         >
                                           <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                                           </svg>
-                                        </a>
+                                        </button>
                                       </div>
                                     ) : (
                                       // Outros arquivos: link com ícone
@@ -2019,6 +2032,29 @@ async function iniciarChamada() {
               )}
             </div>
 
+          </div>
+        )}
+
+        {/* Lightbox de imagem */}
+        {imagemExpandida && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4 cursor-zoom-out"
+            onClick={() => setImagemExpandida(null)}
+          >
+            <img
+              src={imagemExpandida}
+              alt="Imagem expandida"
+              className="max-w-full max-h-full object-contain rounded-lg select-none"
+              onClick={e => e.stopPropagation()}
+            />
+            <button
+              className="absolute top-4 right-4 p-2 rounded-full text-white hover:bg-white hover:bg-opacity-20 transition-all"
+              onClick={() => setImagemExpandida(null)}
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
         )}
 
