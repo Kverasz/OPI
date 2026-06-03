@@ -300,13 +300,16 @@ export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanel
       }
 
       // Se status é "Avaliado", salva a avaliação por rubrica
-      if (projectFormData.status === 'Avaliado' && criterios.length > 0) {
-        // Garante que todas as rubricas existam (usa BOM como default)
+      if (projectFormData.status === 'Avaliado') {
+        if (criterios.length === 0) {
+          alert('Erro: critérios de avaliação não carregados. Recarregue a página.');
+          return;
+        }
         const rubricasCompletas = criterios.map(c => {
           const existente = avaliacaoForm.rubricas.find(r => r.criterioId === c.id);
           return existente || { criterioId: c.id, conceito: 'BOM', observacao: '' };
         });
-        await api.criarAvaliacao({
+        const payload = {
           projeto: editingProject.id,
           conceito: calcularConceitoFinal(),
           feedback_geral: avaliacaoForm.feedbackGeral || 'Avaliado pelo coordenador.',
@@ -316,7 +319,12 @@ export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanel
             conceito: conceitoRubricaMap[r.conceito] || 'BOM',
             comentario: r.observacao,
           })),
-        });
+        };
+        const resAvaliacao = await api.criarAvaliacao(payload);
+        if (resAvaliacao?.__status >= 400 || resAvaliacao?.detail) {
+          alert('Erro ao salvar avaliação: ' + JSON.stringify(resAvaliacao));
+          return;
+        }
       }
 
       setEditingProject(null);
