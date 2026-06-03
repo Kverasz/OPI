@@ -205,7 +205,7 @@ export function AlunoPanel({ onLogout, userName }: AlunoPanelProps) {
         const token = localStorage.getItem('opi_token');
         gruposCarregados.forEach((g: any) => {
           if (wsRefs.current[g.id]) return; // já conectado
-          const ws = new WebSocket(`ws://127.0.0.1:8000/ws/chat-grupo/${g.id}/?token=${token}`);
+          const ws = new WebSocket(`${(import.meta.env.VITE_WS_URL || 'ws://127.0.0.1:8000')}/ws/chat-grupo/${g.id}/?token=${token}`);
           ws.onmessage = (event) => {
             const d = JSON.parse(event.data);
             const msg: Message = {
@@ -281,7 +281,7 @@ export function AlunoPanel({ onLogout, userName }: AlunoPanelProps) {
     if (videoWsRef.current && videoWsRef.current.readyState <= WebSocket.OPEN) return; // já conectado
 
     const token = localStorage.getItem('opi_token');
-    const ws = new WebSocket(`ws://127.0.0.1:8000/ws/video-grupo/${selectedGroup}/?token=${token}`);
+    const ws = new WebSocket(`${(import.meta.env.VITE_WS_URL || 'ws://127.0.0.1:8000')}/ws/video-grupo/${selectedGroup}/?token=${token}`);
     videoWsRef.current = ws;
 
     ws.onmessage = (event) => {
