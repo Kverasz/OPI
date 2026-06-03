@@ -1334,10 +1334,9 @@ export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanel
                                 checked={ativo}
                                 onChange={() => {
                                   if (ativo) {
-                                    setFormData({ ...formData, turmaIds: formData.turmaIds.filter(id => !turmasDoCurso.some(t => t.id === id)) });
+                                    setFormData(prev => ({ ...prev, turmaIds: prev.turmaIds.filter(id => !turmasDoCurso.some(t => t.id === id)) }));
                                   } else {
-                                    // seleciona a primeira turma do curso por default
-                                    if (turmasDoCurso[0]) setFormData({ ...formData, turmaIds: [...formData.turmaIds, turmasDoCurso[0].id] });
+                                    if (turmasDoCurso[0]) setFormData(prev => ({ ...prev, turmaIds: [...prev.turmaIds, turmasDoCurso[0].id] }));
                                   }
                                 }}
                               />
@@ -1349,8 +1348,10 @@ export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanel
                                   value={turmaSelecionada}
                                   onChange={(e) => {
                                     const novoId = Number(e.target.value);
-                                    const semCurso = formData.turmaIds.filter(id => !turmasDoCurso.some(t => t.id === id));
-                                    setFormData({ ...formData, turmaIds: novoId ? [...semCurso, novoId] : semCurso });
+                                    setFormData(prev => {
+                                      const semCurso = prev.turmaIds.filter(id => !turmasDoCurso.some(t => t.id === id));
+                                      return { ...prev, turmaIds: novoId ? [...semCurso, novoId] : semCurso };
+                                    });
                                   }}
                                   className="w-full px-3 py-2 border rounded-lg outline-none bg-white text-sm"
                                   style={{ borderColor: 'var(--color-border)', color: '#003D7A' }}
