@@ -221,4 +221,26 @@ def enviar_mensagem_grupo(request, grupo_id):
             canal=canal, autor=request.user, conteudo=conteudo, tipo='TEXTO'
         )
 
-    return Response(_serializar_mensagem(mensagem, request), status=201)
+    dados = _serializar_mensagem(mensagem, request)
+
+    # Broadcast via WebSocket para todos os membros do grupo
+    try:
+        from channels.layers import get_channel_layer
+        from asgiref.sync import async_to_sync
+        channel_layer = get_channel_layer()
+        room_group = f'chat_grupo_{grupo_id}'
+        async_to_sync(channel_layer.group_send)(room_group, {
+            'type': 'chat_message',
+            'id': dados['id'],
+            'autor_id': request.user.id,
+            'autor_nome': request.user.nome,
+            'conteudo': dados['conteudo'],
+            'tipo': dados['tipo'],
+            'arquivo_url': dados['arquivo_url'],
+            'nome_arquivo': dados['nome_arquivo'],
+            'enviada_em': dados['enviada_em'],
+        })
+    except Exception:
+        pass  # Não falha se WebSocket não estiver disponível
+
+    return Response(dados, status=201)
