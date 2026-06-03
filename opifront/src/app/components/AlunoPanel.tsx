@@ -2081,7 +2081,7 @@ export function AlunoPanel({ onLogout, userName }: AlunoPanelProps) {
                 {(!localStream || !camOn) && (
                   <div className="absolute inset-0 flex items-center justify-center" style={{ backgroundColor: '#222' }}>
                     <div className="w-20 h-20 rounded-full flex items-center justify-center text-white text-3xl font-bold" style={{ backgroundColor: '#003D7A' }}>
-                      {profile.nome.charAt(0).toUpperCase()}
+                      {(profile.nome || 'Eu').charAt(0).toUpperCase()}
                     </div>
                   </div>
                 )}
@@ -2101,14 +2101,14 @@ export function AlunoPanel({ onLogout, userName }: AlunoPanelProps) {
                   ) : (
                     <div className="flex flex-col items-center gap-3">
                       <div className="w-20 h-20 rounded-full flex items-center justify-center text-white text-3xl font-bold" style={{ backgroundColor: '#003D7A' }}>
-                        {peer.nome.charAt(0).toUpperCase()}
+                        {(peer.nome || '?').charAt(0).toUpperCase()}
                       </div>
                       <span className="text-sm text-gray-400">Conectando...</span>
                     </div>
                   )}
                   <div className="absolute bottom-3 left-3">
                     <span className="text-xs text-white bg-black bg-opacity-60 px-2 py-1 rounded-full">
-                      {peer.nome}
+                      {peer.nome || 'Participante'}
                     </span>
                   </div>
                 </div>
