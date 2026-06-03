@@ -1527,16 +1527,41 @@ async function iniciarChamada() {
                                 )}
                                 {msg.tipo === 'ARQUIVO' && msg.arquivoUrl ? (
                                   <div>
-                                    <a
-                                      href={msg.arquivoUrl}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm underline"
-                                      style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
-                                    >
-                                      <Paperclip className="w-4 h-4 flex-shrink-0" />
-                                      <span className="truncate max-w-[200px]">{msg.nomeArquivo || 'Arquivo'}</span>
-                                    </a>
+                                    {/\.(png|jpg|jpeg|gif|webp|bmp|svg)$/i.test(msg.nomeArquivo || '') ? (
+                                      // Imagem: exibe inline com botão de download
+                                      <div className="relative group">
+                                        <img
+                                          src={msg.arquivoUrl}
+                                          alt={msg.nomeArquivo || 'Imagem'}
+                                          className="rounded-lg max-w-[260px] max-h-[200px] object-cover cursor-pointer"
+                                          onClick={() => window.open(msg.arquivoUrl, '_blank')}
+                                        />
+                                        <a
+                                          href={msg.arquivoUrl}
+                                          download={msg.nomeArquivo}
+                                          className="absolute top-2 right-2 p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                          style={{ backgroundColor: 'rgba(0,0,0,0.55)' }}
+                                          title="Baixar imagem"
+                                          onClick={e => e.stopPropagation()}
+                                        >
+                                          <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                          </svg>
+                                        </a>
+                                      </div>
+                                    ) : (
+                                      // Outros arquivos: link com ícone
+                                      <a
+                                        href={msg.arquivoUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm underline"
+                                        style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
+                                      >
+                                        <Paperclip className="w-4 h-4 flex-shrink-0" />
+                                        <span className="truncate max-w-[200px]">{msg.nomeArquivo || 'Arquivo'}</span>
+                                      </a>
+                                    )}
                                     {msg.text && <p className="text-sm mt-1">{msg.text}</p>}
                                   </div>
                                 ) : (
