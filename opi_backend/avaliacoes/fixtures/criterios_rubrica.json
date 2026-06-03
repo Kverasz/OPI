@@ -1,0 +1,7 @@
+[
+  {"model": "avaliacoes.criteriorubrica", "pk": 1, "fields": {"nome": "Funcionalidade", "descricao": "O sistema atende aos requisitos funcionais e opera corretamente", "ordem": 1, "ativo": true}},
+  {"model": "avaliacoes.criteriorubrica", "pk": 2, "fields": {"nome": "Qualidade do Código", "descricao": "Organização, boas práticas, legibilidade e documentação do código", "ordem": 2, "ativo": true}},
+  {"model": "avaliacoes.criteriorubrica", "pk": 3, "fields": {"nome": "Interface e Usabilidade", "descricao": "Design, experiência do usuário e acessibilidade", "ordem": 3, "ativo": true}},
+  {"model": "avaliacoes.criteriorubrica", "pk": 4, "fields": {"nome": "Inovação e Criatividade", "descricao": "Soluções criativas e diferenciais do projeto", "ordem": 4, "ativo": true}},
+  {"model": "avaliacoes.criteriorubrica", "pk": 5, "fields": {"nome": "Documentação", "descricao": "Completude e clareza da documentação técnica", "ordem": 5, "ativo": true}}
+]

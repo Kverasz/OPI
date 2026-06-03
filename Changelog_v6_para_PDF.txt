@@ -1,0 +1,68 @@
+========================================================
+  OPI - Observatório de Projetos Integradores (SENAC ADS)
+  Atualizações para Levantamento_Requisitos_OPI_v6
+  Data: 02/06/2026
+========================================================
+
+NOVAS FUNCIONALIDADES IMPLEMENTADAS (desde v5)
+-----------------------------------------------
+
+1. GRUPOS CRIADOS PELO COORDENADOR COM MEMBROS VINCULADOS POR TURMA
+   - O coordenador pode criar grupos no painel de administração.
+   - Cada grupo pertence a uma turma específica.
+   - Membros do grupo são alunos selecionados a partir da lista filtrada por turma.
+   - O coordenador pode editar e excluir grupos existentes.
+   - Tabela de banco: grupos (campos: id, nome, descricao, turma_id, criado_por_id,
+     cor, criado_em; relação N:N com usuários via tabela grupos_membros).
+
+2. CHAT DE GRUPO PERSISTIDO NO BANCO (tabela mensagens_grupo)
+   - Cada grupo possui um canal de chat interno.
+   - Mensagens são persistidas no banco de dados (não apenas em memória).
+   - Tabela de banco: mensagens_grupo (campos: id, grupo_id, autor_id,
+     conteudo, enviado_em).
+   - Alunos membros do grupo podem enviar e visualizar o histórico de mensagens.
+
+3. FEED COM PUBLICAÇÃO SELETIVA PELO ALUNO
+   - Campo booleano "publicado_no_feed" no modelo Projeto.
+   - O aluno pode optar por publicar ou não o projeto no feed público.
+   - O feed exibe apenas projetos com publicado_no_feed = true.
+   - Permite que projetos em desenvolvimento não apareçam publicamente.
+
+4. PROJETO VINCULA GRUPO AUTOMATICAMENTE AO SER CRIADO
+   - Ao criar um projeto, o aluno pode selecionar um grupo.
+   - O campo grupo_id é armazenado diretamente no projeto (FK nullable).
+   - Os membros do grupo são automaticamente adicionados como membros do projeto.
+   - A FK grupo_id no modelo Projeto permite rastrear qual grupo originou o projeto.
+   - Tabela de banco: projetos (novo campo: grupo_id FK → grupos.id, nullable).
+
+5. FILTRO POR TURMA NOS PROJETOS DO COORDENADOR
+   - O painel do coordenador na aba "Projetos" possui filtro por turma.
+   - O filtro exibe apenas turmas com projetos cadastrados (lista dinâmica).
+   - Combinável com filtro por status (Pendente / Em Avaliação / Avaliado).
+
+6. CAMPO CURSO NOS USUÁRIOS
+   - Modelo Usuario recebe campo "curso" (CharField, opcional).
+   - Cursos disponíveis: Tecnologia da Informação, Gastronomia, Design, Administração.
+   - Exibido no card do usuário no painel do coordenador.
+   - Formulário de criação/edição de usuário inclui seleção de curso
+     (visível para alunos e professores).
+
+========================================================
+ALTERAÇÕES TÉCNICAS RELACIONADAS
+========================================================
+
+Backend (Django):
+  - projetos/models.py: Grupo.membros (M2M → Usuario), Projeto.grupo (FK → Grupo, null=True)
+  - projetos/serializers.py: grupo_id adicionado em ProjetoSerializer.fields;
+    ProjetoCriarSerializer.create() salva grupo no projeto e vincula membros
+  - Migration: projetos/migrations/0005_add_grupo_fk_to_projeto.py
+
+Frontend (React/TypeScript):
+  - CoordenadorPanel.tsx: interface Projeto inclui grupoId; mapeamento de p.grupo_id
+    na listagem; handleEditProject preenche grupoId a partir do projeto atual
+
+========================================================
+INSTRUÇÃO: Incorporar estas informações ao documento
+Levantamento_Requisitos_OPI_v5.pdf (renomear para v6)
+nas seções de Requisitos Funcionais e Modelo de Dados.
+========================================================
