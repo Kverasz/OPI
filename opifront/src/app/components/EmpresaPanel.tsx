@@ -16,6 +16,7 @@ interface MembroPerfil {
   sobreMim: string;
   softSkills: string[];
   hardSkills: string[];
+  projetos: { id: number; titulo: string; conceito: Conceito }[];
 }
 
 interface Projeto {
@@ -79,6 +80,7 @@ function mapearMembro(u: any, turmaFallback: string): MembroPerfil {
     sobreMim: u.sobre_mim || '',
     softSkills: Array.isArray(u.soft_skills) ? u.soft_skills : [],
     hardSkills: Array.isArray(u.hard_skills) ? u.hard_skills : [],
+    projetos: [],
   };
 }
 
@@ -120,11 +122,17 @@ export function EmpresaPanel({ onLogout, empresaNome }: EmpresaPanelProps) {
         });
         setProjetos(projetosMapeados);
 
-        // Extrair alunos únicos de todos os projetos
+        // Extrair alunos únicos com seus projetos vinculados
         const alunosMap = new Map<number, MembroPerfil>();
         projetosMapeados.forEach(proj => {
           proj.membrosProfiles.forEach(m => {
-            if (!alunosMap.has(m.id)) alunosMap.set(m.id, m);
+            if (!alunosMap.has(m.id)) {
+              alunosMap.set(m.id, { ...m, projetos: [] });
+            }
+            const aluno = alunosMap.get(m.id)!;
+            if (!aluno.projetos.some(p => p.id === proj.id)) {
+              aluno.projetos.push({ id: proj.id, titulo: proj.titulo, conceito: proj.conceito });
+            }
           });
         });
         setAlunos(Array.from(alunosMap.values()).sort((a, b) => a.nome.localeCompare(b.nome)));
@@ -624,6 +632,26 @@ export function EmpresaPanel({ onLogout, empresaNome }: EmpresaPanelProps) {
 
                 {!viewingProfile.sobreMim && !viewingProfile.softSkills.length && !viewingProfile.hardSkills.length && (
                   <p className="text-muted-foreground text-sm italic">Este aluno ainda não preencheu o perfil completo.</p>
+                )}
+
+                {viewingProfile.projetos.length > 0 && (
+                  <div>
+                    <h5 className="font-medium mb-3" style={{ color: '#003D7A' }}>Projetos Avaliados</h5>
+                    <div className="space-y-2">
+                      {viewingProfile.projetos.map(p => (
+                        <div key={p.id} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 border border-border">
+                          <div className="flex items-center gap-2">
+                            <Award className="w-4 h-4 flex-shrink-0" style={{ color: '#FF6B00' }} />
+                            <span className="text-sm font-medium">{p.titulo}</span>
+                          </div>
+                          <span className="px-2 py-1 rounded-full text-xs text-white flex-shrink-0"
+                            style={{ backgroundColor: getConceitoColor(p.conceito) }}>
+                            {p.conceito}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 )}
 
                 <div className="p-4 rounded-lg" style={{ backgroundColor: '#E8F5E9', border: '2px solid #5CB85C' }}>
