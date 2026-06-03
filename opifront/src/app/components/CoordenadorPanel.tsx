@@ -1101,19 +1101,24 @@ export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanel
                 </div>
                 <div className="flex gap-3 pt-2">
                   <button onClick={async () => {
-                    if (!turmaFormData.nome.trim()) return;
-                    // Gera código único com sufixo numérico para evitar conflitos
-                    const codigoBase = turmaFormData.nome.replace(/\s+/g, '-').toUpperCase();
-                    const codigoUnico = `${codigoBase}-${Date.now().toString().slice(-4)}`;
-                    const payload = { ...turmaFormData, codigo: codigoUnico };
-                    const nova = await api.criarTurma(payload);
-                    if (nova.id) {
-                      setTurmasDisponiveis([...turmasDisponiveis, { id: nova.id, nome: nova.nome, turno: nova.turno, ano: nova.ano, semestre: nova.semestre }]);
-                      setTurmaFormData({ nome: '', codigo: '', turno: 'MANHA', ano: new Date().getFullYear(), semestre: 1 });
-                      setShowTurmaForm(false);
-                    } else {
-                      const erro = nova.codigo?.[0] || nova.nome?.[0] || nova.detail || JSON.stringify(nova);
-                      alert('Erro ao criar turma: ' + erro);
+                    if (!turmaFormData.nome.trim()) {
+                      alert('Digite o nome da turma.');
+                      return;
+                    }
+                    try {
+                      const codigoBase = turmaFormData.nome.replace(/\s+/g, '-').toUpperCase();
+                      const codigoUnico = `${codigoBase}-${Date.now().toString().slice(-4)}`;
+                      const payload = { ...turmaFormData, codigo: codigoUnico };
+                      const nova = await api.criarTurma(payload);
+                      if (nova.id) {
+                        setTurmasDisponiveis([...turmasDisponiveis, { id: nova.id, nome: nova.nome, turno: nova.turno, ano: nova.ano, semestre: nova.semestre }]);
+                        setTurmaFormData({ nome: '', codigo: '', turno: 'MANHA', ano: new Date().getFullYear(), semestre: 1 });
+                        setShowTurmaForm(false);
+                      } else {
+                        alert('Erro: ' + JSON.stringify(nova));
+                      }
+                    } catch(e: any) {
+                      alert('Erro inesperado: ' + (e?.message || String(e)));
                     }
                   }} className="flex-1 py-3 text-white rounded-lg hover:opacity-90 transition-all font-medium" style={{ backgroundColor: '#9B59B6' }}>
                     Criar Turma
