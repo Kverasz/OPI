@@ -346,6 +346,20 @@ export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanel
     setShowProjectForm(true);
   };
 
+  const [redefinindoSenha, setRedefinindoSenha] = useState<Usuario | null>(null);
+  const [novaSenha, setNovaSenha] = useState('');
+
+  const handleRedefinirSenha = async () => {
+    if (!redefinindoSenha || novaSenha.length < 6) {
+      alert('A senha deve ter pelo menos 6 caracteres.');
+      return;
+    }
+    await api.redefinirSenha(redefinindoSenha.id, novaSenha);
+    setRedefinindoSenha(null);
+    setNovaSenha('');
+    alert('Senha alterada com sucesso!');
+  };
+
   const handleDelete = async (id: number) => {
     if (confirm('Tem certeza que deseja excluir este usuário?')) {
       await api.deletarUsuario(id);
@@ -762,6 +776,9 @@ export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanel
                   <div className="flex gap-2">
                     <button onClick={() => handleEdit(usuario)} className="flex-1 flex items-center justify-center gap-2 px-3 py-2 border-2 rounded-lg hover:bg-gray-50 transition-all" style={{ color: '#003D7A', borderColor: '#003D7A' }}>
                       <Edit className="w-4 h-4" /> Editar
+                    </button>
+                    <button onClick={() => { setRedefinindoSenha(usuario); setNovaSenha(''); }} className="flex items-center justify-center gap-2 px-3 py-2 border-2 rounded-lg hover:bg-gray-50 transition-all" style={{ color: '#FF6B00', borderColor: '#FF6B00' }} title="Redefinir senha">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>
                     </button>
                     <button onClick={() => handleDelete(usuario.id)} className="flex items-center justify-center gap-2 px-3 py-2 border-2 border-red-500 text-red-500 rounded-lg hover:bg-red-50 transition-all">
                       <Trash2 className="w-4 h-4" />
@@ -1200,6 +1217,41 @@ export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanel
                     Cancelar
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal Redefinir Senha */}
+        {redefinindoSenha && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl p-6 max-w-sm w-full">
+              <div className="flex items-center justify-between mb-4">
+                <h3 style={{ color: '#003D7A' }}>Redefinir Senha</h3>
+                <button onClick={() => setRedefinindoSenha(null)} className="p-2 hover:bg-gray-100 rounded-lg"><X className="w-5 h-5" /></button>
+              </div>
+              <p className="text-sm text-muted-foreground mb-4">Definir nova senha para <strong>{redefinindoSenha.nome}</strong></p>
+              <input
+                type="password"
+                value={novaSenha}
+                onChange={(e) => setNovaSenha(e.target.value)}
+                placeholder="Nova senha (mínimo 6 caracteres)"
+                className="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2 mb-4"
+                style={{ borderColor: 'var(--color-border)' }}
+                onKeyDown={(e) => e.key === 'Enter' && handleRedefinirSenha()}
+                autoFocus
+              />
+              <div className="flex gap-3">
+                <button onClick={handleRedefinirSenha}
+                  className="flex-1 py-2 text-white rounded-lg hover:opacity-90 font-medium"
+                  style={{ backgroundColor: '#FF6B00' }}>
+                  Salvar Nova Senha
+                </button>
+                <button onClick={() => setRedefinindoSenha(null)}
+                  className="flex-1 py-2 border-2 rounded-lg hover:bg-gray-50 font-medium"
+                  style={{ color: '#003D7A', borderColor: '#003D7A' }}>
+                  Cancelar
+                </button>
               </div>
             </div>
           </div>

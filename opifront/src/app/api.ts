@@ -104,6 +104,15 @@ async editarUsuario(id: number, data: any) {
   return res.json();
 },
 
+async redefinirSenha(id: number, novaSenha: string) {
+  const res = await fetch(`${BASE_URL}/usuarios/${id}/redefinir_senha/`, {
+    method: 'POST',
+    headers: headers(),
+    body: JSON.stringify({ nova_senha: novaSenha, confirmar_senha: novaSenha })
+  });
+  return res.json();
+},
+
 async deletarUsuario(id: number) {
   const res = await fetch(`${BASE_URL}/usuarios/${id}/`, {
     method: 'DELETE',
