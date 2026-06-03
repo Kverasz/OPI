@@ -496,7 +496,6 @@ export function AlunoPanel({ onLogout, userName }: AlunoPanelProps) {
     }
 
     localStreamRef.current = stream;
-    setLocalStream(stream); // estado React para garantir re-render
 
     // Fecha WS de presença — evita dupla entrada na sala de sinalização
     videoWsRef.current?.close();
@@ -509,6 +508,8 @@ export function AlunoPanel({ onLogout, userName }: AlunoPanelProps) {
     callWsRef.current = callWs;
 
     callWs.onopen = () => {
+      // Atualiza stream e inCall no mesmo ciclo de render
+      setLocalStream(stream);
       setInCall(true);
       setLoadingCall(false);
     };
@@ -2050,16 +2051,19 @@ export function AlunoPanel({ onLogout, userName }: AlunoPanelProps) {
             }}>
               {/* Vídeo local */}
               <div className="relative rounded-xl overflow-hidden flex items-center justify-center" style={{ backgroundColor: '#222' }}>
-                <video
-                  ref={el => {
-                    (localVideoRef as any).current = el;
-                    if (el && localStream) el.srcObject = localStream;
-                  }}
-                  autoPlay muted playsInline
-                  className="w-full h-full object-cover"
-                  style={{ transform: 'scaleX(-1)' }}
-                />
-                {!camOn && (
+                {localStream && (
+                  <video
+                    key={localStream.id}
+                    ref={el => {
+                      (localVideoRef as any).current = el;
+                      if (el) el.srcObject = localStream;
+                    }}
+                    autoPlay muted playsInline
+                    className="w-full h-full object-cover"
+                    style={{ transform: 'scaleX(-1)' }}
+                  />
+                )}
+                {(!localStream || !camOn) && (
                   <div className="absolute inset-0 flex items-center justify-center" style={{ backgroundColor: '#222' }}>
                     <div className="w-20 h-20 rounded-full flex items-center justify-center text-white text-3xl font-bold" style={{ backgroundColor: '#003D7A' }}>
                       {profile.nome.charAt(0).toUpperCase()}
