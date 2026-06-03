@@ -12,6 +12,7 @@ interface MembroPerfil {
   foto?: string;
   curso: string;
   turma: string;
+  turmas: { nome: string; curso: string }[];
   sobreMim: string;
   softSkills: string[];
   hardSkills: string[];
@@ -63,14 +64,18 @@ function getConceitoColor(conceito: string) {
   }
 }
 
-function mapearMembro(u: any, turma: string): MembroPerfil {
+function mapearMembro(u: any, turmaFallback: string): MembroPerfil {
+  const todasTurmas = Array.isArray(u.turmas) && u.turmas.length > 0
+    ? u.turmas.map((t: any) => ({ nome: t.nome || t, curso: getCursoDaTurma(t.nome || t) }))
+    : [{ nome: turmaFallback, curso: getCursoDaTurma(turmaFallback) }];
   return {
     id: u.id,
     nome: u.nome || '',
     email: u.email || '',
     foto: u.foto_url || '',
-    curso: u.curso || getCursoDaTurma(turma),
-    turma,
+    curso: todasTurmas[0]?.curso || getCursoDaTurma(turmaFallback),
+    turma: todasTurmas[0]?.nome || turmaFallback,
+    turmas: todasTurmas,
     sobreMim: u.sobre_mim || '',
     softSkills: Array.isArray(u.soft_skills) ? u.soft_skills : [],
     hardSkills: Array.isArray(u.hard_skills) ? u.hard_skills : [],
@@ -78,30 +83,30 @@ function mapearMembro(u: any, turma: string): MembroPerfil {
 }
 
 export function EmpresaPanel({ onLogout, empresaNome }: EmpresaPanelProps) {
+  const [currentView, setCurrentView] = useState<'projetos' | 'alunos'>('projetos');
   const [cursoFilter, setCursoFilter] = useState('Todos os Cursos');
   const [conceitoFilter, setConceitoFilter] = useState('Todos os Conceitos');
   const [searchQuery, setSearchQuery] = useState('');
+  const [alunoSearch, setAlunoSearch] = useState('');
+  const [alunoCursoFilter, setAlunoCursoFilter] = useState('Todos os Cursos');
   const [viewingProject, setViewingProject] = useState<Projeto | null>(null);
   const [viewingTeam, setViewingTeam] = useState<MembroPerfil[] | null>(null);
   const [viewingProfile, setViewingProfile] = useState<MembroPerfil | null>(null);
   const [projetos, setProjetos] = useState<Projeto[]>([]);
+  const [alunos, setAlunos] = useState<MembroPerfil[]>([]);
 
   useEffect(() => {
     api.listarPortfolio().then((data: any) => {
       const lista = data.results || data;
       if (Array.isArray(lista)) {
-        setProjetos(lista.map((p: any) => {
+        const projetosMapeados = lista.map((p: any) => {
           const turma = p.turma?.nome || '';
           const curso = getCursoDaTurma(turma);
           const membrosProfiles: MembroPerfil[] = (p.membros_detalhe || [])
             .map((m: any) => m.usuario ? mapearMembro(m.usuario, turma) : null)
             .filter(Boolean);
           return {
-            id: p.id,
-            titulo: p.titulo,
-            descricao: p.descricao,
-            turma,
-            curso,
+            id: p.id, titulo: p.titulo, descricao: p.descricao, turma, curso,
             membros: membrosProfiles.map(m => m.nome).join(', '),
             membrosProfiles,
             tecnologias: p.tecnologias?.map((t: any) => t.tecnologia).join(', ') || '',
@@ -112,7 +117,17 @@ export function EmpresaPanel({ onLogout, empresaNome }: EmpresaPanelProps) {
             linkGithub: p.link_repositorio || '',
             linkProjeto: p.link_demo || '',
           };
-        }));
+        });
+        setProjetos(projetosMapeados);
+
+        // Extrair alunos únicos de todos os projetos
+        const alunosMap = new Map<number, MembroPerfil>();
+        projetosMapeados.forEach(proj => {
+          proj.membrosProfiles.forEach(m => {
+            if (!alunosMap.has(m.id)) alunosMap.set(m.id, m);
+          });
+        });
+        setAlunos(Array.from(alunosMap.values()).sort((a, b) => a.nome.localeCompare(b.nome)));
       }
     });
   }, []);
@@ -141,7 +156,19 @@ export function EmpresaPanel({ onLogout, empresaNome }: EmpresaPanelProps) {
               <p className="text-[10px] md:text-xs text-muted-foreground hidden sm:block">Portfólio de Talentos - OPI</p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <nav className="hidden md:flex gap-2">
+              <button onClick={() => setCurrentView('projetos')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${currentView === 'projetos' ? 'text-white' : 'hover:bg-gray-100'}`}
+                style={currentView === 'projetos' ? { backgroundColor: '#003D7A' } : { color: '#003D7A' }}>
+                <Briefcase className="w-4 h-4" /> Projetos
+              </button>
+              <button onClick={() => setCurrentView('alunos')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${currentView === 'alunos' ? 'text-white' : 'hover:bg-gray-100'}`}
+                style={currentView === 'alunos' ? { backgroundColor: '#5CB85C' } : { color: '#5CB85C' }}>
+                <Users className="w-4 h-4" /> Alunos
+              </button>
+            </nav>
             <div className="text-right hidden sm:block">
               <p className="text-sm font-medium" style={{ color: '#003D7A' }}>{empresaNome}</p>
               <p className="text-xs text-muted-foreground">Empresa Parceira</p>
@@ -154,6 +181,88 @@ export function EmpresaPanel({ onLogout, empresaNome }: EmpresaPanelProps) {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        {/* View Alunos */}
+        {currentView === 'alunos' && (
+          <div>
+            <div className="mb-6">
+              <h2 style={{ color: '#003D7A' }}>Talentos SENAC</h2>
+              <p className="text-sm text-muted-foreground">{alunos.length} aluno(s) com projetos avaliados</p>
+            </div>
+
+            {/* Filtros */}
+            <div className="bg-white p-4 rounded-xl shadow-sm border border-border mb-6 flex flex-col md:flex-row gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input type="text" value={alunoSearch} onChange={e => setAlunoSearch(e.target.value)}
+                  placeholder="Buscar por nome ou e-mail..."
+                  className="w-full pl-9 pr-4 py-2 border rounded-lg outline-none focus:ring-2"
+                  style={{ borderColor: 'var(--color-border)' }} />
+              </div>
+              <select value={alunoCursoFilter} onChange={e => setAlunoCursoFilter(e.target.value)}
+                className="w-full md:w-64 px-4 py-2 border rounded-lg outline-none bg-white"
+                style={{ borderColor: 'var(--color-border)', color: '#003D7A' }}>
+                <option value="Todos os Cursos">Todos os Cursos</option>
+                <option value="Análise e Desenvolvimento de Sistemas">ADS</option>
+                <option value="Design">Design</option>
+                <option value="Gastronomia">Gastronomia</option>
+              </select>
+            </div>
+
+            {/* Grid de Alunos */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {alunos
+                .filter(a => {
+                  const matchSearch = !alunoSearch || a.nome.toLowerCase().includes(alunoSearch.toLowerCase()) || a.email.toLowerCase().includes(alunoSearch.toLowerCase());
+                  const matchCurso = alunoCursoFilter === 'Todos os Cursos' || a.turmas.some(t => t.curso === alunoCursoFilter) || a.curso === alunoCursoFilter;
+                  return matchSearch && matchCurso;
+                })
+                .map(aluno => (
+                  <button key={aluno.id} onClick={() => setViewingProfile(aluno)}
+                    className="bg-white rounded-xl p-5 shadow-sm hover:shadow-md transition-all border border-border text-left">
+                    <div className="flex items-center gap-4 mb-3">
+                      {aluno.foto ? (
+                        <img src={aluno.foto} alt={aluno.nome} className="w-14 h-14 rounded-full object-cover border-2 flex-shrink-0" style={{ borderColor: '#003D7A' }} />
+                      ) : (
+                        <div className="w-14 h-14 rounded-full flex items-center justify-center text-white text-xl font-bold flex-shrink-0" style={{ backgroundColor: '#003D7A' }}>
+                          {aluno.nome.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate" style={{ color: '#003D7A' }}>{aluno.nome}</p>
+                        <p className="text-xs text-muted-foreground truncate">{aluno.email}</p>
+                        {aluno.turmas.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {aluno.turmas.map((t, i) => (
+                              <span key={i} className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: '#E6F2FF', color: '#003D7A' }}>
+                                {t.curso === 'Análise e Desenvolvimento de Sistemas' ? 'ADS' : t.curso} · {t.nome}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    {(aluno.softSkills.length > 0 || aluno.hardSkills.length > 0) && (
+                      <p className="text-xs" style={{ color: '#5CB85C' }}>Ver perfil completo →</p>
+                    )}
+                  </button>
+                ))}
+            </div>
+
+            {alunos.filter(a => {
+              const matchSearch = !alunoSearch || a.nome.toLowerCase().includes(alunoSearch.toLowerCase()) || a.email.toLowerCase().includes(alunoSearch.toLowerCase());
+              const matchCurso = alunoCursoFilter === 'Todos os Cursos' || a.turmas.some(t => t.curso === alunoCursoFilter) || a.curso === alunoCursoFilter;
+              return matchSearch && matchCurso;
+            }).length === 0 && (
+              <div className="text-center py-12 bg-white rounded-xl border border-border">
+                <Users className="w-16 h-16 mx-auto mb-4" style={{ color: '#5CB85C', opacity: 0.4 }} />
+                <p className="text-muted-foreground">Nenhum aluno encontrado</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {currentView === 'projetos' && <>
 
         {/* Banner */}
         <div className="mb-8 p-4 md:p-6 rounded-xl border-2" style={{ background: 'linear-gradient(to right, #E6F2FF, #FFF4ED)', borderColor: '#003D7A' }}>
@@ -392,7 +501,7 @@ export function EmpresaPanel({ onLogout, empresaNome }: EmpresaPanelProps) {
               </button>
             </div>
           </div>
-        )}
+        </>}
 
         {/* Modal Equipe */}
         {viewingTeam && (
@@ -464,8 +573,19 @@ export function EmpresaPanel({ onLogout, empresaNome }: EmpresaPanelProps) {
                   <h4 className="text-xl font-bold mb-2" style={{ color: '#003D7A' }}>{viewingProfile.nome}</h4>
                   <div className="space-y-1 text-sm text-muted-foreground">
                     <div className="flex items-center gap-2"><Mail className="w-4 h-4" /><span>{viewingProfile.email}</span></div>
-                    {viewingProfile.curso && <div className="flex items-center gap-2"><GraduationCap className="w-4 h-4" /><span>{viewingProfile.curso}</span></div>}
-                    {viewingProfile.turma && <div className="flex items-center gap-2"><Award className="w-4 h-4" /><span>{viewingProfile.turma}</span></div>}
+                    {viewingProfile.turmas.length > 0 ? (
+                      viewingProfile.turmas.map((t, i) => (
+                        <div key={i} className="flex items-center gap-2">
+                          <GraduationCap className="w-4 h-4" />
+                          <span>{t.curso === 'Análise e Desenvolvimento de Sistemas' ? 'ADS' : t.curso} · {t.nome}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <>
+                        {viewingProfile.curso && <div className="flex items-center gap-2"><GraduationCap className="w-4 h-4" /><span>{viewingProfile.curso}</span></div>}
+                        {viewingProfile.turma && <div className="flex items-center gap-2"><Award className="w-4 h-4" /><span>{viewingProfile.turma}</span></div>}
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
