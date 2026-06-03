@@ -107,6 +107,7 @@ export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanel
   const [projectTurmaFilter, setProjectTurmaFilter] = useState('Todas as Turmas');
 
   const [showTurmaForm, setShowTurmaForm] = useState(false);
+  const [cursoTurmaForm, setCursoTurmaForm] = useState('');
   const [filtroTurmaCurso, setFiltroTurmaCurso] = useState('Todos');
   const [turmaFormData, setTurmaFormData] = useState({
     nome: '',
@@ -1002,7 +1003,7 @@ export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanel
                 <h2 style={{ color: '#003D7A' }}>Gerenciamento de Turmas</h2>
                 <p className="text-sm text-muted-foreground">Cadastre e gerencie as turmas do SENAC</p>
               </div>
-              <button onClick={() => setShowTurmaForm(true)} className="flex items-center gap-2 px-4 py-2 text-white rounded-lg hover:opacity-90 transition-all" style={{ backgroundColor: '#9B59B6' }}>
+              <button onClick={() => { setShowTurmaForm(true); setCursoTurmaForm(''); setTurmaFormData({ nome: '', codigo: '', turno: 'MANHA', ano: new Date().getFullYear(), semestre: 1 }); }} className="flex items-center gap-2 px-4 py-2 text-white rounded-lg hover:opacity-90 transition-all" style={{ backgroundColor: '#9B59B6' }}>
                 <Plus className="w-5 h-5" /> Nova Turma
               </button>
             </div>
@@ -1065,14 +1066,29 @@ export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanel
               </div>
               <div className="space-y-4">
                 <div>
+                  <label className="block mb-2 font-medium">Curso</label>
+                  <select value={cursoTurmaForm} onChange={(e) => {
+                    const curso = e.target.value;
+                    setCursoTurmaForm(curso);
+                    const prefixo = curso === 'Análise e Desenvolvimento de Sistemas' ? 'ADS' : curso;
+                    setTurmaFormData({ ...turmaFormData, nome: prefixo ? prefixo + ' ' : '', codigo: '' });
+                  }} className="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2 bg-white" style={{ borderColor: 'var(--color-border)', color: '#003D7A' }}>
+                    <option value="">Selecione um curso</option>
+                    <option value="Análise e Desenvolvimento de Sistemas">Análise e Desenvolvimento de Sistemas (ADS)</option>
+                    <option value="Design">Design</option>
+                    <option value="Gastronomia">Gastronomia</option>
+                  </select>
+                </div>
+                <div>
                   <label className="block mb-2 font-medium">Nome da Turma</label>
                   <input
                     type="text"
                     value={turmaFormData.nome}
-                    onChange={(e) => setTurmaFormData({ ...turmaFormData, nome: e.target.value, codigo: e.target.value.replace(/\s+/g, '-').toUpperCase() })}
-                    className="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2"
+                    onChange={(e) => setTurmaFormData({ ...turmaFormData, nome: e.target.value })}
+                    disabled={!cursoTurmaForm}
+                    className="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{ borderColor: 'var(--color-border)' }}
-                    placeholder="Ex: ADS 185, Design 98, Gastronomia 31"
+                    placeholder={cursoTurmaForm ? `Ex: ${cursoTurmaForm === 'Análise e Desenvolvimento de Sistemas' ? 'ADS' : cursoTurmaForm} 185` : 'Selecione um curso primeiro'}
                   />
                 </div>
                 <div className="grid grid-cols-3 gap-3">
@@ -1111,7 +1127,11 @@ export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanel
                       const payload = { ...turmaFormData, codigo: codigoUnico };
                       const nova = await api.criarTurma(payload);
                       if (nova.id) {
-                        setTurmasDisponiveis([...turmasDisponiveis, { id: nova.id, nome: nova.nome, turno: nova.turno, ano: nova.ano, semestre: nova.semestre }]);
+                        // Recarrega lista do banco para confirmar persistência
+                        const lista = await api.listarTurmas();
+                        const turmasAtualizadas = (lista.results || lista).map((t: any) => ({ id: t.id, nome: t.nome, turno: t.turno, ano: t.ano, semestre: t.semestre }));
+                        setTurmasDisponiveis(turmasAtualizadas);
+                        setCursoTurmaForm('');
                         setTurmaFormData({ nome: '', codigo: '', turno: 'MANHA', ano: new Date().getFullYear(), semestre: 1 });
                         setShowTurmaForm(false);
                       } else {
