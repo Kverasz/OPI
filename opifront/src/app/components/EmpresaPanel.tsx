@@ -262,7 +262,7 @@ export function EmpresaPanel({ onLogout, empresaNome }: EmpresaPanelProps) {
           </div>
         )}
 
-        {currentView === 'projetos' && <>
+        {currentView === 'projetos' && (<div>
 
         {/* Banner */}
         <div className="mb-8 p-4 md:p-6 rounded-xl border-2" style={{ background: 'linear-gradient(to right, #E6F2FF, #FFF4ED)', borderColor: '#003D7A' }}>
@@ -501,7 +501,7 @@ export function EmpresaPanel({ onLogout, empresaNome }: EmpresaPanelProps) {
               </button>
             </div>
           </div>
-        </>}
+        </div>)}
 
         {/* Modal Equipe */}
         {viewingTeam && (
