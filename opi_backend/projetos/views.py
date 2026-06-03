@@ -202,6 +202,7 @@ class GrupoViewSet(viewsets.ModelViewSet):
     """
     CRUD de grupos — Coordenador cria, aluno visualiza os seus.
     """
+    pagination_class = None
     permission_classes = [IsAuthenticated]
     serializer_class = GrupoSerializer
 

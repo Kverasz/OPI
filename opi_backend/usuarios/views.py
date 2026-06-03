@@ -57,11 +57,8 @@ class MeuPerfilView(generics.RetrieveUpdateAPIView):
 
 
 class UsuarioViewSet(viewsets.ModelViewSet):
-    """
-    Gerenciamento de usuários — apenas Coordenador.
-    GET    /api/usuarios/           lista todos
-    POST   /api/usuarios/           cria novo
-    GET    /api/usuarios/{id}/      detalhe
+    """Gerenciamento de usuários — apenas Coordenador."""
+    pagination_class = None
     PATCH  /api/usuarios/{id}/      edita
     DELETE /api/usuarios/{id}/      desativa (soft delete)
     POST   /api/usuarios/{id}/redefinir_senha/
@@ -139,6 +136,7 @@ class TurmaViewSet(viewsets.ModelViewSet):
     permission_classes = [IsCoordenador]
     queryset = Turma.objects.all().order_by('-ano', '-semestre')
     serializer_class = TurmaSerializer
+    pagination_class = None  # Retorna todas as turmas sem paginação
 
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
