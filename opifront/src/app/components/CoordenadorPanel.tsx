@@ -186,7 +186,17 @@ export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanel
 
     api.listarCriterios().then((data: any) => {
       const lista = data.results || data;
-      if (Array.isArray(lista)) setCriterios(lista.map((c: any) => ({ id: c.id, nome: c.nome, descricao: c.descricao, peso: c.peso })));
+      if (Array.isArray(lista)) {
+        const crit = lista.map((c: any) => ({ id: c.id, nome: c.nome, descricao: c.descricao, peso: c.peso }));
+        setCriterios(crit);
+        // Se já há um projeto sendo editado com status Avaliado e rubricas vazias, inicializa
+        setAvaliacaoForm(prev => {
+          if (prev.rubricas.length === 0 && crit.length > 0) {
+            return { ...prev, rubricas: crit.map(c => ({ criterioId: c.id, conceito: 'BOM', observacao: '' })) };
+          }
+          return prev;
+        });
+      }
     });
   }, []);
 
@@ -311,7 +321,7 @@ export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanel
         });
         const payload = {
           projeto: editingProject.id,
-          conceito: calcularConceitoFinal(),
+          conceito: calcularConceitoFinalDe(rubricasCompletas),
           feedback_geral: avaliacaoForm.feedbackGeral || 'Avaliado pelo coordenador.',
           rubrica_assinatura: avaliacaoForm.rubricaAssinatura,
           criterios: rubricasCompletas.map(r => ({
@@ -434,10 +444,10 @@ export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanel
     }
   };
 
-  const calcularConceitoFinal = () => {
+  const calcularConceitoFinalDe = (rubricas: {criterioId: number; conceito: string}[]) => {
     const conceitoNum: Record<string, number> = { 'EXCELENTE': 10, 'OTIMO': 8.5, 'BOM': 7, 'AINDA_NAO_SUFICIENTE': 5, 'INSUFICIENTE': 3 };
     let soma = 0, pesos = 0;
-    avaliacaoForm.rubricas.forEach(r => {
+    rubricas.forEach(r => {
       const c = criterios.find(c => c.id === r.criterioId);
       if (c) { soma += (conceitoNum[r.conceito] || 7) * c.peso; pesos += c.peso; }
     });
@@ -449,6 +459,8 @@ export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanel
     if (media >= 4) return 'AINDA_NAO_SUFICIENTE';
     return 'INSUFICIENTE';
   };
+
+  const calcularConceitoFinal = () => calcularConceitoFinalDe(avaliacaoForm.rubricas);
 
   const getCursoDaTurma = (nome: string) => {
     const n = nome.toUpperCase();
