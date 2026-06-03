@@ -452,14 +452,12 @@ export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanel
   };
 
   const calcularConceitoFinalDe = (rubricas: {criterioId: number; conceito: string}[]) => {
-    const conceitoNum: Record<string, number> = { 'EXCELENTE': 10, 'OTIMO': 8.5, 'BOM': 7, 'AINDA_NAO_SUFICIENTE': 5, 'INSUFICIENTE': 3 };
-    let soma = 0, pesos = 0;
-    rubricas.forEach(r => {
-      const c = criterios.find(c => c.id === r.criterioId);
-      if (c) { soma += (conceitoNum[r.conceito] || 7) * c.peso; pesos += c.peso; }
-    });
-    if (pesos === 0) return 'BOM';
-    const media = soma / pesos;
+    const conceitoNum: Record<string, number> = {
+      'EXCELENTE': 10, 'OTIMO': 8.5, 'BOM': 7, 'AINDA_NAO_SUFICIENTE': 5, 'INSUFICIENTE': 3
+    };
+    if (rubricas.length === 0) return 'BOM';
+    const soma = rubricas.reduce((acc, r) => acc + (conceitoNum[r.conceito] ?? 7), 0);
+    const media = soma / rubricas.length;
     if (media >= 9) return 'EXCELENTE';
     if (media >= 8) return 'OTIMO';
     if (media >= 6) return 'BOM';
