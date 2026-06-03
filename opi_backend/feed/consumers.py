@@ -99,6 +99,10 @@ class VideoCallConsumer(AsyncWebsocketConsumer):
         self.room_group = f'video_grupo_{self.grupo_id}'
         self.user = self.scope['user']
 
+        # modo=presenca: so observa a sala, nao entra como participante
+        query = dict(q.split('=') for q in self.scope.get('query_string', b'').decode().split('&') if '=' in q)
+        self.modo_presenca = query.get('modo') == 'presenca'
+
         if not self.user or not self.user.is_authenticated:
             await self.close()
             return
@@ -111,7 +115,21 @@ class VideoCallConsumer(AsyncWebsocketConsumer):
         await self.channel_layer.group_add(self.room_group, self.channel_name)
         await self.accept()
 
-        # Registra na sala
+        if self.modo_presenca:
+            # Apenas envia quem esta na sala, sem registrar como participante
+            outros = [
+                {'user_id': v['user_id'], 'user_nome': v['user_nome'] or f'Usuário {v["user_id"]}', 'channel': k}
+                for k, v in self.active_rooms.get(self.room_group, {}).items()
+                if v['user_id'] != self.user.id
+            ]
+            await self.send(text_data=__import__('json').dumps({
+                'type': 'room-status',
+                'participants': outros,
+                'my_channel': self.channel_name,
+            }))
+            return
+
+        # Registra na sala (modo chamada)
         if self.room_group not in self.active_rooms:
             self.active_rooms[self.room_group] = {}
         nome = self.user.nome or f'Usuário {self.user.id}'
@@ -142,17 +160,18 @@ class VideoCallConsumer(AsyncWebsocketConsumer):
         })
 
     async def disconnect(self, close_code):
-        # Remove da sala
-        room = self.active_rooms.get(self.room_group, {})
-        room.pop(self.channel_name, None)
-        if not room:
-            self.active_rooms.pop(self.room_group, None)
+        if not self.modo_presenca:
+            # Remove da sala e avisa os outros (apenas participantes reais)
+            room = self.active_rooms.get(self.room_group, {})
+            room.pop(self.channel_name, None)
+            if not room:
+                self.active_rooms.pop(self.room_group, None)
 
-        await self.channel_layer.group_send(self.room_group, {
-            'type': 'peer_left',
-            'user_id': self.user.id,
-            'user_nome': self.user.nome,
-        })
+            await self.channel_layer.group_send(self.room_group, {
+                'type': 'peer_left',
+                'user_id': self.user.id,
+                'user_nome': self.user.nome,
+            })
         await self.channel_layer.group_discard(self.room_group, self.channel_name)
 
     async def receive(self, text_data):

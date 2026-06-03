@@ -296,7 +296,7 @@ export function AlunoPanel({ onLogout, userName }: AlunoPanelProps) {
     if (videoWsRef.current && videoWsRef.current.readyState <= WebSocket.OPEN) return;
 
     const token = localStorage.getItem('opi_token');
-    const ws = new WebSocket(`${(import.meta.env.VITE_WS_URL || 'ws://127.0.0.1:8000')}/ws/video-grupo/${selectedGroup}/?token=${token}`);
+    const ws = new WebSocket(`${(import.meta.env.VITE_WS_URL || 'ws://127.0.0.1:8000')}/ws/video-grupo/${selectedGroup}/?token=${token}&modo=presenca`);
     videoWsRef.current = ws;
 
     ws.onmessage = (event) => {
