@@ -233,7 +233,7 @@ export function EmpresaPanel({ onLogout, empresaNome }: EmpresaPanelProps) {
                         <img src={aluno.foto} alt={aluno.nome} className="w-14 h-14 rounded-full object-cover border-2 flex-shrink-0" style={{ borderColor: '#003D7A' }} />
                       ) : (
                         <div className="w-14 h-14 rounded-full flex items-center justify-center text-white text-xl font-bold flex-shrink-0" style={{ backgroundColor: '#003D7A' }}>
-                          {aluno.nome.charAt(0).toUpperCase()}
+                          {(aluno.nome || '?').charAt(0).toUpperCase()}
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
@@ -535,7 +535,7 @@ export function EmpresaPanel({ onLogout, empresaNome }: EmpresaPanelProps) {
                       <img src={membro.foto} alt={membro.nome} className="w-14 h-14 rounded-full object-cover flex-shrink-0 border-2" style={{ borderColor: '#003D7A' }} />
                     ) : (
                       <div className="w-14 h-14 rounded-full flex items-center justify-center text-white text-xl font-bold flex-shrink-0" style={{ backgroundColor: '#003D7A' }}>
-                        {membro.nome.charAt(0).toUpperCase()}
+                        {(membro.nome || '?').charAt(0).toUpperCase()}
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
@@ -576,7 +576,7 @@ export function EmpresaPanel({ onLogout, empresaNome }: EmpresaPanelProps) {
                 ) : (
                   <div className="w-20 h-20 rounded-full flex items-center justify-center text-white text-2xl font-bold flex-shrink-0"
                     style={{ backgroundColor: '#003D7A' }}>
-                    {viewingProfile.nome.charAt(0).toUpperCase()}
+                    {(viewingProfile.nome || '?').charAt(0).toUpperCase()}
                   </div>
                 )}
                 <div className="flex-1">

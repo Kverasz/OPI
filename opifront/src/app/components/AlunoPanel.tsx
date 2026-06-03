@@ -1697,7 +1697,7 @@ export function AlunoPanel({ onLogout, userName }: AlunoPanelProps) {
                                 className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
                                 style={{ backgroundColor: grupos.find(g => g.id === selectedGroup)?.cor }}
                               >
-                                {m.nome.charAt(0).toUpperCase()}
+                                {(m.nome || '?').charAt(0).toUpperCase()}
                               </div>
                               <div>
                                 <p className="font-medium text-sm" style={{ color: '#003D7A' }}>{m.nome}</p>
@@ -1723,7 +1723,7 @@ export function AlunoPanel({ onLogout, userName }: AlunoPanelProps) {
                                   <div className="flex items-center justify-center gap-2 mb-2">
                                     {peersInRoom.map(p => (
                                       <span key={p.id} className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white text-xs font-bold">
-                                        {p.nome.charAt(0).toUpperCase()}
+                                        {(p.nome || '?').charAt(0).toUpperCase()}
                                       </span>
                                     ))}
                                   </div>
@@ -1796,7 +1796,7 @@ export function AlunoPanel({ onLogout, userName }: AlunoPanelProps) {
                       style={{ borderColor: '#003D7A' }}
                     >
                       <span className="text-5xl font-bold" style={{ color: '#003D7A' }}>
-                        {userName.charAt(0).toUpperCase()}
+                        {(userName || 'U').charAt(0).toUpperCase()}
                       </span>
                     </div>
                   )}

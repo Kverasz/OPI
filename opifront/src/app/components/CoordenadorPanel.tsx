@@ -842,12 +842,12 @@ export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanel
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold" style={{ backgroundColor: getTipoColor(usuario.tipo) }}>
-                        {usuario.nome.charAt(0).toUpperCase()}
+                        {(usuario.nome || '?').charAt(0).toUpperCase()}
                       </div>
                       <div>
                         <h3 className="font-medium">{usuario.nome}</h3>
                         <span className="inline-block px-2 py-1 rounded text-xs text-white mt-1" style={{ backgroundColor: getTipoColor(usuario.tipo) }}>
-                          {usuario.tipo.charAt(0).toUpperCase() + usuario.tipo.slice(1)}
+                          {(usuario.tipo || 'aluno').charAt(0).toUpperCase() + (usuario.tipo || 'aluno').slice(1)}
                         </span>
                       </div>
                     </div>
@@ -1037,7 +1037,7 @@ export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanel
                 <div key={grupo.id} className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all border border-border">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold text-lg" style={{ backgroundColor: grupo.cor }}>
-                      {grupo.nome.charAt(0).toUpperCase()}
+                      {(grupo.nome || '?').charAt(0).toUpperCase()}
                     </div>
                     <div>
                       <h3 style={{ color: '#003D7A' }}>{grupo.nome}</h3>
