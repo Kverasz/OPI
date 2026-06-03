@@ -499,7 +499,14 @@ export function AlunoPanel({ onLogout, userName }: AlunoPanelProps) {
 
     localStreamRef.current = stream;
 
-    // Cria WS dedicado à chamada (separado do WS de presença)
+    // Fecha o WS de presença antes de abrir o de chamada
+    // (evita que o usuário apareça duas vezes na sala)
+    if (videoWsRef.current) {
+      videoWsRef.current.close();
+      videoWsRef.current = null;
+    }
+
+    // Cria WS dedicado à chamada
     const token = localStorage.getItem('opi_token');
     const wsUrl = `${(import.meta.env.VITE_WS_URL || 'ws://127.0.0.1:8000')}/ws/video-grupo/${selectedGroup}/?token=${token}`;
     const callWs = new WebSocket(wsUrl);
@@ -1733,22 +1740,30 @@ export function AlunoPanel({ onLogout, userName }: AlunoPanelProps) {
                             }}>
                               {/* Vídeo local */}
                               <div className="relative rounded-lg overflow-hidden bg-gray-800 flex items-center justify-center" style={{ minHeight: '120px' }}>
-                                <video ref={localVideoRef} autoPlay muted playsInline
+                                <video
+                                  ref={el => {
+                                    (localVideoRef as any).current = el;
+                                    if (el && localStreamRef.current) el.srcObject = localStreamRef.current;
+                                  }}
+                                  autoPlay muted playsInline
                                   className="w-full h-full object-cover"
-                                  style={{ transform: 'scaleX(-1)' }} />
+                                  style={{ transform: 'scaleX(-1)', minHeight: '100px' }} />
                                 <span className="absolute bottom-2 left-2 text-xs text-white bg-black bg-opacity-50 px-2 py-0.5 rounded">
                                   Você {!camOn && '(câm. off)'}
                                 </span>
                               </div>
                               {/* Vídeos remotos */}
-                              {remotePeers.map(peer => (
-                                <div key={peer.channel} className="relative rounded-lg overflow-hidden bg-gray-800 flex items-center justify-center">
+                              {remotePeers.filter(p => p.id !== profile.id).map(peer => (
+                                <div key={peer.channel} className="relative rounded-lg overflow-hidden bg-gray-800 flex items-center justify-center" style={{ minHeight: '100px' }}>
                                   {peer.stream ? (
                                     <video autoPlay playsInline className="w-full h-full object-cover"
-                                      ref={el => { if (el && peer.stream) el.srcObject = peer.stream; }} />
+                                      ref={el => { if (el) { el.srcObject = peer.stream!; } }} />
                                   ) : (
-                                    <div className="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold" style={{ backgroundColor: '#003D7A' }}>
-                                      {peer.nome.charAt(0).toUpperCase()}
+                                    <div className="flex flex-col items-center gap-2">
+                                      <div className="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold" style={{ backgroundColor: '#003D7A' }}>
+                                        {peer.nome.charAt(0).toUpperCase()}
+                                      </div>
+                                      <span className="text-xs text-gray-400">Conectando...</span>
                                     </div>
                                   )}
                                   <span className="absolute bottom-2 left-2 text-xs text-white bg-black bg-opacity-50 px-2 py-0.5 rounded">
