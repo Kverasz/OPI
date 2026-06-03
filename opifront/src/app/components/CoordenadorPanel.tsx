@@ -1581,7 +1581,8 @@ export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanel
                   <select
                     value={projectFormData.grupoId}
                     onChange={(e) => setProjectFormData({ ...projectFormData, grupoId: Number(e.target.value) })}
-                    className="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2 bg-white"
+                    disabled={!cursoProjeto || !projectFormData.turmaId}
+                    className="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2 bg-white disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{ borderColor: 'var(--color-border)', color: '#003D7A' }}
                   >
                     <option value={0}>
