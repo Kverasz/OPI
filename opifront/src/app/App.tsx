@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router';
 import { BookOpen, Users, GraduationCap, Building2, Heart, MessageSquare, Eye, EyeOff, ChevronDown } from 'lucide-react';
 import { SenacLogo } from './components/SenacLogo';
 import { AlunoPanel } from './components/AlunoPanel';
 import { CoordenadorPanel } from './components/CoordenadorPanel';
 import { ProfessorPanel } from './components/ProfessorPanel';
 import { EmpresaPanel } from './components/EmpresaPanel';
+import TermosDeUso from './pages/TermosDeUso';
+import PoliticaDePrivacidade from './pages/PoliticaDePrivacidade';
 
 interface UserCredential {
   email: string;
@@ -13,7 +16,7 @@ interface UserCredential {
   type: 'aluno' | 'coordenador' | 'professor' | 'empresa';
 }
 
-export default function App() {
+function AppContent() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -400,11 +403,11 @@ export default function App() {
                   <input type="checkbox" className="rounded mt-0.5 flex-shrink-0" required />
                   <label className="text-muted-foreground leading-relaxed">
                     Li e estou de acordo com o{' '}
-                    <a href="#termos" className="underline hover:opacity-70 transition-opacity" style={{ color: '#003D7A' }}>
+                    <a href="/termos" target="_blank" rel="noopener noreferrer" className="underline hover:opacity-70 transition-opacity" style={{ color: '#003D7A' }}>
                       Termo de Uso
                     </a>
                     {' '}e{' '}
-                    <a href="#privacidade" className="underline hover:opacity-70 transition-opacity" style={{ color: '#003D7A' }}>
+                    <a href="/privacidade" target="_blank" rel="noopener noreferrer" className="underline hover:opacity-70 transition-opacity" style={{ color: '#003D7A' }}>
                       Política de Privacidade
                     </a>
                   </label>
@@ -486,5 +489,17 @@ export default function App() {
         </div>
       </footer>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/termos" element={<TermosDeUso />} />
+        <Route path="/privacidade" element={<PoliticaDePrivacidade />} />
+        <Route path="*" element={<AppContent />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
