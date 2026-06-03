@@ -651,27 +651,34 @@ async function iniciarChamada() {
     }));
   };
 
+  const [enviando, setEnviando] = useState(false);
+
   const handleSendMessage = async () => {
-    if (selectedGroup === null) return;
+    if (selectedGroup === null || enviando) return;
 
     if (arquivoSelecionado) {
-      // Arquivos ainda vão via REST (WebSocket não suporta binário neste consumer)
-      await api.enviarArquivoGrupo(selectedGroup, arquivoSelecionado, newMessage.trim());
+      setEnviando(true);
+      const arquivo = arquivoSelecionado;
+      const legenda = newMessage.trim();
       setArquivoSelecionado(null);
       setNewMessage('');
-      await recarregarMensagens(selectedGroup);
+      try {
+        await api.enviarArquivoGrupo(selectedGroup, arquivo, legenda);
+        await recarregarMensagens(selectedGroup);
+      } finally {
+        setEnviando(false);
+      }
     } else {
       if (!newMessage.trim()) return;
-      // Texto vai via WebSocket — o consumer salva e faz broadcast
+      const texto = newMessage.trim();
+      setNewMessage('');
       const ws = wsRefs.current[selectedGroup];
       if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ conteudo: newMessage.trim() }));
+        ws.send(JSON.stringify({ conteudo: texto }));
       } else {
-        // Fallback para REST se WebSocket não estiver conectado
-        await api.enviarMensagem(selectedGroup, newMessage);
+        await api.enviarMensagem(selectedGroup, texto);
         await recarregarMensagens(selectedGroup);
       }
-      setNewMessage('');
     }
   };
 
@@ -1576,11 +1583,13 @@ async function iniciarChamada() {
                             />
                             <button
                               onClick={handleSendMessage}
-                              disabled={!newMessage.trim() && !arquivoSelecionado}
+                              disabled={(!newMessage.trim() && !arquivoSelecionado) || enviando}
                               className="px-4 py-2 text-white rounded-lg hover:opacity-90 transition-all disabled:opacity-40"
                               style={{ backgroundColor: '#003D7A' }}
                             >
-                              <Send className="w-5 h-5" />
+                              {enviando
+                                ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                : <Send className="w-5 h-5" />}
                             </button>
                           </div>
                         </div>
