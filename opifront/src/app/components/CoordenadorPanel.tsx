@@ -183,6 +183,11 @@ export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanel
     api.listarDashboard().then((data: any) => {
       setDashboardData(data);
     });
+
+    api.listarCriterios().then((data: any) => {
+      const lista = data.results || data;
+      if (Array.isArray(lista)) setCriterios(lista.map((c: any) => ({ id: c.id, nome: c.nome, descricao: c.descricao, peso: c.peso })));
+    });
   }, []);
 
   const [formData, setFormData] = useState({
@@ -196,6 +201,13 @@ export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanel
   });
 
   const [cursoProjeto, setCursoProjeto] = useState('');
+  const [criterios, setCriterios] = useState<{id: number; nome: string; descricao: string; peso: number}[]>([]);
+  const [avaliacaoForm, setAvaliacaoForm] = useState<{
+    professorId: number;
+    rubricas: {criterioId: number; conceito: string; observacao: string}[];
+    feedbackGeral: string;
+    rubricaAssinatura: string;
+  }>({ professorId: 0, rubricas: [], feedbackGeral: '', rubricaAssinatura: '' });
   const [projectFormData, setProjectFormData] = useState({
     titulo: '',
     descricao: '',
@@ -267,18 +279,10 @@ export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanel
       .split(',').map(t => t.trim()).filter(Boolean);
 
     if (editingProject) {
-      const statusMap: Record<string, string> = {
-        'Pendente': 'PENDENTE',
-        'Em Avaliação': 'EM_AVALIACAO',
-        'Avaliado': 'AVALIADO',
-      };
-      const conceitoMap: Record<string, string> = {
-        'Excelente': 'EXCELENTE',
-        'Ótimo': 'OTIMO',
-        'Bom': 'BOM',
-        'Ainda não suficiente': 'AINDA_NAO_SUFICIENTE',
-        'Insuficiente': 'INSUFICIENTE',
-      };
+      const statusMap: Record<string, string> = { 'Pendente': 'PENDENTE', 'Em Avaliação': 'EM_AVALIACAO', 'Avaliado': 'AVALIADO' };
+      const conceitoRubricaMap: Record<string, string> = { 'EXCELENTE': 'EXCELENTE', 'OTIMO': 'OTIMO', 'BOM': 'BOM', 'AINDA_NAO_SUFICIENTE': 'AINDA_NAO_SUFICIENTE', 'INSUFICIENTE': 'INSUFICIENTE' };
+
+      // Atualiza dados básicos do projeto
       await api.editarProjeto(editingProject.id, {
         titulo: projectFormData.titulo,
         descricao: projectFormData.descricao,
@@ -288,9 +292,28 @@ export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanel
         tecnologias: tecnologiasArr,
         grupo_id: projectFormData.grupoId || null,
         status: statusMap[projectFormData.status] || 'PENDENTE',
-        conceito: projectFormData.conceito ? conceitoMap[projectFormData.conceito] || null : null,
-        feedback_geral: projectFormData.feedback || null,
       });
+
+      // Se status é "Em Avaliação" e um professor foi selecionado, atribui
+      if (projectFormData.status === 'Em Avaliação' && avaliacaoForm.professorId) {
+        await api.iniciarAvaliacao(editingProject.id);
+      }
+
+      // Se status é "Avaliado", salva a avaliação por rubrica
+      if (projectFormData.status === 'Avaliado' && avaliacaoForm.rubricas.length > 0 && avaliacaoForm.feedbackGeral.trim()) {
+        await api.criarAvaliacao({
+          projeto: editingProject.id,
+          conceito: calcularConceitoFinal(),
+          feedback_geral: avaliacaoForm.feedbackGeral,
+          rubrica_assinatura: avaliacaoForm.rubricaAssinatura,
+          criterios: avaliacaoForm.rubricas.map(r => ({
+            criterio_id: r.criterioId,
+            conceito: conceitoRubricaMap[r.conceito] || r.conceito,
+            comentario: r.observacao,
+          })),
+        });
+      }
+
       setEditingProject(null);
     } else {
       await api.criarProjeto({
@@ -345,6 +368,13 @@ export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanel
     const curso = turmaObj ? getCursoDaTurma(turmaObj.nome) : '';
     setCursoProjeto(curso);
     setProjectFormData({ titulo: project.titulo, descricao: project.descricao, turma: project.turma, turmaId: turmaObj?.id || 0, membros: project.membros, grupoId: project.grupoId, tecnologias: project.tecnologias, status: project.status, autor: project.autor, autorId: 0, conceito: project.conceito || '', feedback: project.feedback || '', linkGithub: project.linkGithub || '', linkProjeto: project.linkProjeto || '', linkDocumentacao: project.linkDocumentacao || '', linkVideo: project.linkVideo || '' });
+    // Inicializa form de avaliação
+    setAvaliacaoForm({
+      professorId: 0,
+      rubricas: criterios.map(c => ({ criterioId: c.id, conceito: 'BOM', observacao: '' })),
+      feedbackGeral: project.feedback || '',
+      rubricaAssinatura: project.avaliacaoDetalhes?.rubricaAssinatura || '',
+    });
     setShowProjectForm(true);
   };
 
@@ -377,6 +407,22 @@ export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanel
         api.listarDashboard().then((data: any) => setDashboardData(data));
       }
     }
+  };
+
+  const calcularConceitoFinal = () => {
+    const conceitoNum: Record<string, number> = { 'EXCELENTE': 10, 'OTIMO': 8.5, 'BOM': 7, 'AINDA_NAO_SUFICIENTE': 5, 'INSUFICIENTE': 3 };
+    let soma = 0, pesos = 0;
+    avaliacaoForm.rubricas.forEach(r => {
+      const c = criterios.find(c => c.id === r.criterioId);
+      if (c) { soma += (conceitoNum[r.conceito] || 7) * c.peso; pesos += c.peso; }
+    });
+    if (pesos === 0) return 'BOM';
+    const media = soma / pesos;
+    if (media >= 9) return 'EXCELENTE';
+    if (media >= 8) return 'OTIMO';
+    if (media >= 6) return 'BOM';
+    if (media >= 4) return 'AINDA_NAO_SUFICIENTE';
+    return 'INSUFICIENTE';
   };
 
   const getCursoDaTurma = (nome: string) => {
@@ -1513,33 +1559,77 @@ export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanel
                   <label className="block mb-2 font-medium">Tecnologias Utilizadas</label>
                   <input type="text" value={projectFormData.tecnologias} onChange={(e) => setProjectFormData({ ...projectFormData, tecnologias: e.target.value })} placeholder="Ex: Python, Django, PostgreSQL" className="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2" style={{ borderColor: 'var(--color-border)' }} required />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block mb-2 font-medium">Status</label>
+                  <select value={projectFormData.status} onChange={(e) => setProjectFormData({ ...projectFormData, status: e.target.value as 'Pendente' | 'Em Avaliação' | 'Avaliado' })} className="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2" style={{ borderColor: 'var(--color-border)' }} required>
+                    <option value="Pendente">Pendente</option>
+                    <option value="Em Avaliação">Em Avaliação</option>
+                    <option value="Avaliado">Avaliado</option>
+                  </select>
+                </div>
+
+                {/* Em Avaliação: atribuir professor */}
+                {projectFormData.status === 'Em Avaliação' && (
                   <div>
-                    <label className="block mb-2 font-medium">Status</label>
-                    <select value={projectFormData.status} onChange={(e) => setProjectFormData({ ...projectFormData, status: e.target.value as 'Pendente' | 'Em Avaliação' | 'Avaliado' })} className="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2" style={{ borderColor: 'var(--color-border)' }} required>
-                      <option value="Pendente">Pendente</option>
-                      <option value="Em Avaliação">Em Avaliação</option>
-                      <option value="Avaliado">Avaliado</option>
+                    <label className="block mb-2 font-medium">Atribuir Professor</label>
+                    <select value={avaliacaoForm.professorId}
+                      onChange={(e) => setAvaliacaoForm({ ...avaliacaoForm, professorId: Number(e.target.value) })}
+                      className="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2 bg-white"
+                      style={{ borderColor: 'var(--color-border)', color: '#003D7A' }}>
+                      <option value={0}>Selecione um professor (opcional)</option>
+                      {usuarios.filter(u => u.tipo === 'professor' && (u.turmaIds?.includes(projectFormData.turmaId) || !projectFormData.turmaId)).map(p => (
+                        <option key={p.id} value={p.id}>{p.nome}</option>
+                      ))}
                     </select>
                   </div>
-                  {projectFormData.status === 'Avaliado' && (
+                )}
+
+                {/* Avaliado: form de rubrica completo */}
+                {projectFormData.status === 'Avaliado' && criterios.length > 0 && (
+                  <div className="border-t pt-4 space-y-4" style={{ borderColor: 'var(--color-border)' }}>
+                    <h4 className="font-medium" style={{ color: '#003D7A' }}>Avaliação por Rubrica</h4>
+                    {criterios.map(c => {
+                      const rubrica = avaliacaoForm.rubricas.find(r => r.criterioId === c.id);
+                      return (
+                        <div key={c.id} className="p-3 rounded-lg border" style={{ backgroundColor: '#FAFAFA', borderColor: '#E5E7EB' }}>
+                          <div className="flex items-start justify-between mb-2">
+                            <div>
+                              <p className="font-medium text-sm" style={{ color: '#003D7A' }}>{c.nome}</p>
+                              <p className="text-xs text-muted-foreground">{c.descricao}</p>
+                            </div>
+                            <select value={rubrica?.conceito || 'BOM'}
+                              onChange={(e) => setAvaliacaoForm(prev => ({ ...prev, rubricas: prev.rubricas.map(r => r.criterioId === c.id ? { ...r, conceito: e.target.value } : r) }))}
+                              className="ml-2 px-2 py-1 border rounded text-xs bg-white" style={{ borderColor: '#E5E7EB', color: '#003D7A' }}>
+                              <option value="EXCELENTE">Excelente</option>
+                              <option value="OTIMO">Ótimo</option>
+                              <option value="BOM">Bom</option>
+                              <option value="AINDA_NAO_SUFICIENTE">Ainda não suficiente</option>
+                              <option value="INSUFICIENTE">Insuficiente</option>
+                            </select>
+                          </div>
+                          <input type="text" placeholder="Observação (opcional)"
+                            value={rubrica?.observacao || ''}
+                            onChange={(e) => setAvaliacaoForm(prev => ({ ...prev, rubricas: prev.rubricas.map(r => r.criterioId === c.id ? { ...r, observacao: e.target.value } : r) }))}
+                            className="w-full px-3 py-1 border rounded text-xs outline-none"
+                            style={{ borderColor: '#E5E7EB' }} />
+                        </div>
+                      );
+                    })}
                     <div>
-                      <label className="block mb-2 font-medium">Conceito</label>
-                      <select value={projectFormData.conceito} onChange={(e) => setProjectFormData({ ...projectFormData, conceito: e.target.value })} className="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2" style={{ borderColor: 'var(--color-border)' }}>
-                        <option value="">Selecione</option>
-                        <option value="Excelente">Excelente</option>
-                        <option value="Ótimo">Ótimo</option>
-                        <option value="Bom">Bom</option>
-                        <option value="Ainda não suficiente">Ainda não suficiente</option>
-                        <option value="Insuficiente">Insuficiente</option>
-                      </select>
+                      <label className="block mb-1 font-medium text-sm">Feedback Geral</label>
+                      <textarea value={avaliacaoForm.feedbackGeral}
+                        onChange={(e) => setAvaliacaoForm({ ...avaliacaoForm, feedbackGeral: e.target.value })}
+                        className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 min-h-[80px] text-sm"
+                        style={{ borderColor: 'var(--color-border)' }} placeholder="Feedback para o aluno..." />
                     </div>
-                  )}
-                </div>
-                {projectFormData.status === 'Avaliado' && (
-                  <div>
-                    <label className="block mb-2 font-medium">Feedback</label>
-                    <textarea value={projectFormData.feedback} onChange={(e) => setProjectFormData({ ...projectFormData, feedback: e.target.value })} className="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2 min-h-[80px]" style={{ borderColor: 'var(--color-border)' }} placeholder="Feedback para o aluno..." />
+                    <div>
+                      <label className="block mb-1 font-medium text-sm">Rubrica (Assinatura)</label>
+                      <input type="text" value={avaliacaoForm.rubricaAssinatura}
+                        onChange={(e) => setAvaliacaoForm({ ...avaliacaoForm, rubricaAssinatura: e.target.value })}
+                        className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 text-sm"
+                        style={{ borderColor: 'var(--color-border)', fontFamily: 'cursive', fontStyle: 'italic' }}
+                        placeholder="Ex: Coord. João Silva" />
+                    </div>
                   </div>
                 )}
                 <div className="pt-4 border-t border-border">
