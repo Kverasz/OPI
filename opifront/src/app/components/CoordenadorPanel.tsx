@@ -300,15 +300,20 @@ export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanel
       }
 
       // Se status é "Avaliado", salva a avaliação por rubrica
-      if (projectFormData.status === 'Avaliado' && avaliacaoForm.rubricas.length > 0 && avaliacaoForm.feedbackGeral.trim()) {
+      if (projectFormData.status === 'Avaliado' && criterios.length > 0) {
+        // Garante que todas as rubricas existam (usa BOM como default)
+        const rubricasCompletas = criterios.map(c => {
+          const existente = avaliacaoForm.rubricas.find(r => r.criterioId === c.id);
+          return existente || { criterioId: c.id, conceito: 'BOM', observacao: '' };
+        });
         await api.criarAvaliacao({
           projeto: editingProject.id,
           conceito: calcularConceitoFinal(),
-          feedback_geral: avaliacaoForm.feedbackGeral,
+          feedback_geral: avaliacaoForm.feedbackGeral || 'Avaliado pelo coordenador.',
           rubrica_assinatura: avaliacaoForm.rubricaAssinatura,
-          criterios: avaliacaoForm.rubricas.map(r => ({
+          criterios: rubricasCompletas.map(r => ({
             criterio_id: r.criterioId,
-            conceito: conceitoRubricaMap[r.conceito] || r.conceito,
+            conceito: conceitoRubricaMap[r.conceito] || 'BOM',
             comentario: r.observacao,
           })),
         });
@@ -1561,7 +1566,19 @@ export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanel
                 </div>
                 <div>
                   <label className="block mb-2 font-medium">Status</label>
-                  <select value={projectFormData.status} onChange={(e) => setProjectFormData({ ...projectFormData, status: e.target.value as 'Pendente' | 'Em Avaliação' | 'Avaliado' })} className="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2" style={{ borderColor: 'var(--color-border)' }} required>
+                  <select value={projectFormData.status} onChange={(e) => {
+                    const s = e.target.value as 'Pendente' | 'Em Avaliação' | 'Avaliado';
+                    setProjectFormData({ ...projectFormData, status: s });
+                    if (s === 'Avaliado') {
+                      setAvaliacaoForm(prev => ({
+                        ...prev,
+                        rubricas: criterios.map(c => {
+                          const existing = prev.rubricas.find(r => r.criterioId === c.id);
+                          return existing || { criterioId: c.id, conceito: 'BOM', observacao: '' };
+                        })
+                      }));
+                    }
+                  }} className="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2" style={{ borderColor: 'var(--color-border)' }} required>
                     <option value="Pendente">Pendente</option>
                     <option value="Em Avaliação">Em Avaliação</option>
                     <option value="Avaliado">Avaliado</option>
@@ -1598,7 +1615,11 @@ export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanel
                               <p className="text-xs text-muted-foreground">{c.descricao}</p>
                             </div>
                             <select value={rubrica?.conceito || 'BOM'}
-                              onChange={(e) => setAvaliacaoForm(prev => ({ ...prev, rubricas: prev.rubricas.map(r => r.criterioId === c.id ? { ...r, conceito: e.target.value } : r) }))}
+                              onChange={(e) => setAvaliacaoForm(prev => {
+                                const existe = prev.rubricas.some(r => r.criterioId === c.id);
+                                const nova = { criterioId: c.id, conceito: e.target.value, observacao: '' };
+                                return { ...prev, rubricas: existe ? prev.rubricas.map(r => r.criterioId === c.id ? { ...r, conceito: e.target.value } : r) : [...prev.rubricas, nova] };
+                              })}
                               className="ml-2 px-2 py-1 border rounded text-xs bg-white" style={{ borderColor: '#E5E7EB', color: '#003D7A' }}>
                               <option value="EXCELENTE">Excelente</option>
                               <option value="OTIMO">Ótimo</option>
@@ -1609,7 +1630,11 @@ export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanel
                           </div>
                           <input type="text" placeholder="Observação (opcional)"
                             value={rubrica?.observacao || ''}
-                            onChange={(e) => setAvaliacaoForm(prev => ({ ...prev, rubricas: prev.rubricas.map(r => r.criterioId === c.id ? { ...r, observacao: e.target.value } : r) }))}
+                            onChange={(e) => setAvaliacaoForm(prev => {
+                              const existe = prev.rubricas.some(r => r.criterioId === c.id);
+                              const nova = { criterioId: c.id, conceito: 'BOM', observacao: e.target.value };
+                              return { ...prev, rubricas: existe ? prev.rubricas.map(r => r.criterioId === c.id ? { ...r, observacao: e.target.value } : r) : [...prev.rubricas, nova] };
+                            })}
                             className="w-full px-3 py-1 border rounded text-xs outline-none"
                             style={{ borderColor: '#E5E7EB' }} />
                         </div>
