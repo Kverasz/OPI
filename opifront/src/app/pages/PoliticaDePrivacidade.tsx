@@ -1,17 +1,11 @@
-import { useNavigate } from 'react-router';
-import { ArrowLeft, Shield } from 'lucide-react';
+import { Shield } from 'lucide-react';
 
 export default function PoliticaDePrivacidade() {
-  const navigate = useNavigate();
-
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(to bottom right, #E6F2FF, #FFFFFF)' }}>
       <header className="bg-white/80 backdrop-blur-sm shadow-sm sticky top-0 z-50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center gap-4">
-          <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm hover:opacity-70 transition-opacity" style={{ color: '#1B3A6B' }}>
-            <ArrowLeft className="w-4 h-4" /> Voltar
-          </button>
-          <div className="border-l pl-4" style={{ borderColor: '#E87722' }}>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div style={{ borderColor: '#E87722' }}>
             <h1 className="text-lg font-bold" style={{ color: '#1B3A6B' }}>Política de Privacidade</h1>
             <p className="text-xs text-gray-500">OPI — Observatório de Projetos Integradores</p>
           </div>
