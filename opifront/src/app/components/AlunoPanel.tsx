@@ -48,7 +48,7 @@ interface Grupo {
   id: number;
   nome: string;
   turmaId: number;
-  membros: { nome: string; email: string; curso?: string }[];
+  membros: { nome: string; email: string; curso?: string; foto?: string }[];
   descricao: string;
   cor: string;
 }
@@ -204,7 +204,7 @@ export function AlunoPanel({ onLogout, userName }: AlunoPanelProps) {
           id: g.id,
           nome: g.nome,
           turmaId: g.turma?.id || 0,
-          membros: g.membros?.map((m: any) => ({ nome: m.nome, email: m.email, curso: m.curso || '' })) || [],
+          membros: g.membros?.map((m: any) => ({ nome: m.nome, email: m.email, curso: m.curso || '', foto: m.foto_url || '' })) || [],
           descricao: g.descricao || '',
           cor: g.cor || '#003D7A'
         }));
@@ -1704,12 +1704,20 @@ export function AlunoPanel({ onLogout, userName }: AlunoPanelProps) {
                         <div className="space-y-3">
                           {grupos.find(g => g.id === selectedGroup)?.membros.map((m, idx) => (
                             <div key={idx} className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 border border-border">
-                              <div
-                                className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
-                                style={{ backgroundColor: grupos.find(g => g.id === selectedGroup)?.cor }}
-                              >
-                                {(m.nome || '?').charAt(0).toUpperCase()}
-                              </div>
+                              {m.foto ? (
+                                <img src={m.foto} alt={m.nome}
+                                  className="w-10 h-10 rounded-full object-cover flex-shrink-0 border-2"
+                                  style={{ borderColor: grupos.find(g => g.id === selectedGroup)?.cor }}
+                                  onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                                />
+                              ) : (
+                                <div
+                                  className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
+                                  style={{ backgroundColor: grupos.find(g => g.id === selectedGroup)?.cor }}
+                                >
+                                  {(m.nome || '?').charAt(0).toUpperCase()}
+                                </div>
+                              )}
                               <div>
                                 <p className="font-medium text-sm" style={{ color: '#003D7A' }}>{m.nome}</p>
                                 <p className="text-xs text-muted-foreground">{m.email}</p>
