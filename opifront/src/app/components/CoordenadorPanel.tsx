@@ -319,9 +319,16 @@ export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanel
           const existente = avaliacaoForm.rubricas.find(r => r.criterioId === c.id);
           return existente || { criterioId: c.id, conceito: 'BOM', observacao: '' };
         });
+        const conceitoCalculado = calcularConceitoFinalDe(rubricasCompletas);
+        const resumo = rubricasCompletas.map(r => {
+          const c = criterios.find(x => x.id === r.criterioId);
+          return `${c?.nome || r.criterioId}: ${r.conceito}`;
+        }).join('\n');
+        if (!window.confirm(`Conceito calculado: ${conceitoCalculado}\n\nCritérios:\n${resumo}\n\nConfirmar avaliação?`)) return;
+
         const payload = {
           projeto: editingProject.id,
-          conceito: calcularConceitoFinalDe(rubricasCompletas),
+          conceito: conceitoCalculado,
           feedback_geral: avaliacaoForm.feedbackGeral || 'Avaliado pelo coordenador.',
           rubrica_assinatura: avaliacaoForm.rubricaAssinatura,
           criterios: rubricasCompletas.map(r => ({
