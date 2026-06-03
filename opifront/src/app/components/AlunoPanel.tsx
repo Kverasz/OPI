@@ -517,9 +517,26 @@ export function AlunoPanel({ onLogout, userName }: AlunoPanelProps) {
     callWs.onerror = () => {
       stream.getTracks().forEach(t => t.stop());
       localStreamRef.current = null;
-      callWsRef.current = null;
+      if (callWsRef.current === callWs) callWsRef.current = null;
+      setLocalStream(null);
+      setInCall(false);
       setLoadingCall(false);
       alert('Erro ao conectar na chamada. Verifique sua conexão.');
+    };
+
+    callWs.onclose = (e) => {
+      // Só encerra a chamada se ainda estamos nela com este WS
+      if (callWsRef.current === callWs && e.code !== 1000) {
+        // Fechamento inesperado
+        stream.getTracks().forEach(t => t.stop());
+        localStreamRef.current = null;
+        callWsRef.current = null;
+        Object.values(pcRefs.current).forEach(pc => pc.close());
+        pcRefs.current = {};
+        setLocalStream(null);
+        setInCall(false);
+        setRemotePeers([]);
+      }
     };
 
     callWs.onmessage = async (event) => {
@@ -2051,18 +2068,16 @@ export function AlunoPanel({ onLogout, userName }: AlunoPanelProps) {
             }}>
               {/* Vídeo local */}
               <div className="relative rounded-xl overflow-hidden flex items-center justify-center" style={{ backgroundColor: '#222' }}>
-                {localStream && (
-                  <video
-                    key={localStream.id}
-                    ref={el => {
-                      (localVideoRef as any).current = el;
-                      if (el) el.srcObject = localStream;
-                    }}
-                    autoPlay muted playsInline
-                    className="w-full h-full object-cover"
-                    style={{ transform: 'scaleX(-1)' }}
-                  />
-                )}
+                <video
+                  ref={el => {
+                    (localVideoRef as any).current = el;
+                    if (el && localStream) el.srcObject = localStream;
+                    else if (el) el.srcObject = null;
+                  }}
+                  autoPlay muted playsInline
+                  className="w-full h-full object-cover"
+                  style={{ transform: 'scaleX(-1)', display: (localStream && camOn) ? 'block' : 'none' }}
+                />
                 {(!localStream || !camOn) && (
                   <div className="absolute inset-0 flex items-center justify-center" style={{ backgroundColor: '#222' }}>
                     <div className="w-20 h-20 rounded-full flex items-center justify-center text-white text-3xl font-bold" style={{ backgroundColor: '#003D7A' }}>
