@@ -72,6 +72,36 @@ const conceitoDisplay: Record<string, string> = {
   INSUFICIENTE: 'Insuficiente',
 };
 
+function mapearProjetoAPI(p: any): Projeto {
+  return {
+    id: p.id,
+    titulo: p.titulo,
+    descricao: p.descricao,
+    turma: p.turma?.nome || '',
+    membros: p.membros_detalhe?.map((m: any) => m.usuario?.nome).join(', ') || '',
+    tecnologias: p.tecnologias?.map((t: any) => t.tecnologia).join(', ') || '',
+    status: p.status === 'PENDENTE' ? 'Pendente' : p.status === 'EM_AVALIACAO' ? 'Em Avaliação' : 'Avaliado',
+    dataSubmissao: p.criado_em?.split('T')[0] || '',
+    conceito: p.conceito ? (conceitoDisplay[p.conceito] || p.conceito) : undefined,
+    feedback: p.feedback_geral || undefined,
+    avaliacaoDetalhes: p.conceito ? {
+      professorNome: p.avaliador_nome || '',
+      data: p.avaliado_em || '',
+      rubricaAssinatura: p.rubrica_assinatura || '',
+      rubricas: (p.rubricas_avaliacao || []).map((r: any) => ({
+        criterioNome: r.criterio_nome || '',
+        criterioDescricao: r.criterio_descricao || '',
+        conceito: conceitoDisplay[r.conceito] || r.conceito || '',
+        observacao: r.comentario || '',
+      })),
+    } : undefined,
+    autor: p.criado_por?.nome || '',
+    grupoId: p.grupo_id || 0,
+    linkGithub: p.link_repositorio || '',
+    linkProjeto: p.link_demo || '',
+  };
+}
+
 export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanelProps) {
   const [currentView, setCurrentView] = useState<'dashboard' | 'usuarios' | 'projetos' | 'grupos' | 'turmas'>('dashboard');
   const [userTypeFilter, setUserTypeFilter] = useState<'todos' | 'aluno' | 'professor' | 'empresa' | 'coordenador'>('todos');
@@ -142,35 +172,7 @@ export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanel
 
     api.listarProjetos().then((data: any) => {
       const lista = data.results || data;
-      if (Array.isArray(lista)) {
-        setProjetos(lista.map((p: any) => ({
-          id: p.id,
-          titulo: p.titulo,
-          descricao: p.descricao,
-          turma: p.turma?.nome || '',
-          membros: p.membros_detalhe?.map((m: any) => m.usuario?.nome).join(', ') || '',
-          tecnologias: p.tecnologias?.map((t: any) => t.tecnologia).join(', ') || '',
-          status: p.status === 'PENDENTE' ? 'Pendente' : p.status === 'EM_AVALIACAO' ? 'Em Avaliação' : 'Avaliado',
-          dataSubmissao: p.criado_em?.split('T')[0] || '',
-          conceito: p.conceito ? (conceitoDisplay[p.conceito] || p.conceito) : undefined,
-          feedback: p.feedback_geral || undefined,
-          avaliacaoDetalhes: p.conceito ? {
-            professorNome: p.avaliador_nome || '',
-            data: p.avaliado_em || '',
-            rubricaAssinatura: p.rubrica_assinatura || '',
-            rubricas: (p.rubricas_avaliacao || []).map((r: any) => ({
-              criterioNome: r.criterio_nome || '',
-              criterioDescricao: r.criterio_descricao || '',
-              conceito: conceitoDisplay[r.conceito] || r.conceito || '',
-              observacao: r.comentario || '',
-            })),
-          } : undefined,
-          autor: p.criado_por?.nome || '',
-          grupoId: p.grupo_id || 0,
-          linkGithub: p.link_repositorio || '',
-          linkProjeto: p.link_demo || '',
-        })));
-      }
+      if (Array.isArray(lista)) setProjetos(lista.map(mapearProjetoAPI));
     });
 
     api.listarGrupos().then((data: any) => {
@@ -359,25 +361,18 @@ export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanel
       });
     }
 
+    // Pequeno delay para garantir que o banco confirmou a transação
+    await new Promise(r => setTimeout(r, 600));
     const data = await api.listarProjetos();
     const lista = data.results || data;
     if (Array.isArray(lista)) {
-      setProjetos(lista.map((p: any) => ({
-        id: p.id,
-        titulo: p.titulo,
-        descricao: p.descricao,
-        turma: p.turma?.nome || '',
-        membros: p.membros_detalhe?.map((m: any) => m.usuario?.nome).join(', ') || '',
-        tecnologias: p.tecnologias?.map((t: any) => t.tecnologia).join(', ') || '',
-        status: p.status === 'PENDENTE' ? 'Pendente' : p.status === 'EM_AVALIACAO' ? 'Em Avaliação' : 'Avaliado',
-        dataSubmissao: p.criado_em?.split('T')[0] || '',
-        conceito: p.conceito ? (conceitoDisplay[p.conceito] || p.conceito) : undefined,
-        feedback: p.feedback_geral || undefined,
-        autor: p.criado_por?.nome || '',
-        grupoId: p.grupo_id || 0,
-        linkGithub: p.link_repositorio || '',
-        linkProjeto: p.link_demo || '',
-      })));
+      const novos = lista.map(mapearProjetoAPI);
+      setProjetos(novos);
+      // Atualiza modal de visualização se estiver aberto
+      if (viewingProject && editingProject) {
+        const atualizado = novos.find(p => p.id === editingProject.id);
+        if (atualizado) setViewingProject(atualizado);
+      }
     }
     api.listarDashboard().then((d: any) => setDashboardData(d));
 
