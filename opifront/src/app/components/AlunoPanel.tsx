@@ -80,6 +80,7 @@ export function AlunoPanel({ onLogout, userName }: AlunoPanelProps) {
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(true);
   const [loadingCall, setLoadingCall] = useState(false);
+  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [peersInRoom, setPeersInRoom] = useState<{id: number; nome: string; channel: string}[]>([]);
   const [remotePeers, setRemotePeers] = useState<{id: number; nome: string; channel: string; stream?: MediaStream}[]>([]);
   const localStreamRef = useRef<MediaStream | null>(null);
@@ -282,17 +283,17 @@ export function AlunoPanel({ onLogout, userName }: AlunoPanelProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [mensagens, selectedGroup]);
 
-  // Seta srcObject do vídeo local após o elemento ser renderizado
+  // Seta srcObject sempre que localStream ou inCall mudar
   useEffect(() => {
-    if (inCall && localVideoRef.current && localStreamRef.current) {
-      localVideoRef.current.srcObject = localStreamRef.current;
+    if (localVideoRef.current && localStream) {
+      localVideoRef.current.srcObject = localStream;
     }
-  }, [inCall]);
+  }, [localStream, inCall]);
 
-  // Conecta WS de vídeo (presença) ao abrir a aba — reutilizado ao entrar na chamada
+  // WS de presença: só conecta quando na aba vídeo e NÃO estiver em chamada
   useEffect(() => {
-    if (activeChat !== 'video' || !selectedGroup) return;
-    if (videoWsRef.current && videoWsRef.current.readyState <= WebSocket.OPEN) return; // já conectado
+    if (activeChat !== 'video' || !selectedGroup || inCall) return;
+    if (videoWsRef.current && videoWsRef.current.readyState <= WebSocket.OPEN) return;
 
     const token = localStorage.getItem('opi_token');
     const ws = new WebSocket(`${(import.meta.env.VITE_WS_URL || 'ws://127.0.0.1:8000')}/ws/video-grupo/${selectedGroup}/?token=${token}`);
@@ -301,7 +302,6 @@ export function AlunoPanel({ onLogout, userName }: AlunoPanelProps) {
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
       if (data.type === 'room-status') {
-        setMyChannel(data.my_channel);
         setPeersInRoom(data.participants || []);
       } else if (data.type === 'peer-joined') {
         setPeersInRoom(prev => [...prev.filter(p => p.channel !== data.channel), { id: data.user_id, nome: data.user_nome, channel: data.channel }]);
@@ -312,13 +312,11 @@ export function AlunoPanel({ onLogout, userName }: AlunoPanelProps) {
     ws.onerror = () => {};
 
     return () => {
-      if (!inCall) {
-        ws.close();
-        videoWsRef.current = null;
-        setPeersInRoom([]);
-      }
+      ws.close();
+      videoWsRef.current = null;
+      setPeersInRoom([]);
     };
-  }, [activeChat, selectedGroup]);
+  }, [activeChat, selectedGroup, inCall]);
 
   const [feedProjects, setFeedProjects] = useState<Project[]>([]);
 
@@ -498,13 +496,11 @@ export function AlunoPanel({ onLogout, userName }: AlunoPanelProps) {
     }
 
     localStreamRef.current = stream;
+    setLocalStream(stream); // estado React para garantir re-render
 
-    // Fecha o WS de presença antes de abrir o de chamada
-    // (evita que o usuário apareça duas vezes na sala)
-    if (videoWsRef.current) {
-      videoWsRef.current.close();
-      videoWsRef.current = null;
-    }
+    // Fecha WS de presença — evita dupla entrada na sala de sinalização
+    videoWsRef.current?.close();
+    videoWsRef.current = null;
 
     // Cria WS dedicado à chamada
     const token = localStorage.getItem('opi_token');
@@ -579,6 +575,7 @@ export function AlunoPanel({ onLogout, userName }: AlunoPanelProps) {
     callWsRef.current = null;
     setInCall(false);
     setLoadingCall(false);
+    setLocalStream(null);
     setRemotePeers([]);
     setMyChannel('');
     setMicOn(true);
@@ -1743,11 +1740,11 @@ export function AlunoPanel({ onLogout, userName }: AlunoPanelProps) {
                                 <video
                                   ref={el => {
                                     (localVideoRef as any).current = el;
-                                    if (el && localStreamRef.current) el.srcObject = localStreamRef.current;
+                                    if (el && localStream) el.srcObject = localStream;
                                   }}
                                   autoPlay muted playsInline
                                   className="w-full h-full object-cover"
-                                  style={{ transform: 'scaleX(-1)', minHeight: '100px' }} />
+                                  style={{ transform: 'scaleX(-1)', minHeight: '100px', backgroundColor: '#1a1a1a' }} />
                                 <span className="absolute bottom-2 left-2 text-xs text-white bg-black bg-opacity-50 px-2 py-0.5 rounded">
                                   Você {!camOn && '(câm. off)'}
                                 </span>
