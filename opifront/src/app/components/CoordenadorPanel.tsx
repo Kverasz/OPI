@@ -373,10 +373,22 @@ export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanel
     const curso = turmaObj ? getCursoDaTurma(turmaObj.nome) : '';
     setCursoProjeto(curso);
     setProjectFormData({ titulo: project.titulo, descricao: project.descricao, turma: project.turma, turmaId: turmaObj?.id || 0, membros: project.membros, grupoId: project.grupoId, tecnologias: project.tecnologias, status: project.status, autor: project.autor, autorId: 0, conceito: project.conceito || '', feedback: project.feedback || '', linkGithub: project.linkGithub || '', linkProjeto: project.linkProjeto || '', linkDocumentacao: project.linkDocumentacao || '', linkVideo: project.linkVideo || '' });
-    // Inicializa form de avaliação
+    // Inicializa form de avaliação com dados existentes
+    const conceitoParaEnum: Record<string, string> = {
+      'Excelente': 'EXCELENTE', 'Ótimo': 'OTIMO', 'Bom': 'BOM',
+      'Ainda não suficiente': 'AINDA_NAO_SUFICIENTE', 'Insuficiente': 'INSUFICIENTE',
+    };
+    const rubricasExistentes = project.avaliacaoDetalhes?.rubricas || [];
     setAvaliacaoForm({
       professorId: 0,
-      rubricas: criterios.map(c => ({ criterioId: c.id, conceito: 'BOM', observacao: '' })),
+      rubricas: criterios.map(c => {
+        const existente = rubricasExistentes.find(r => r.criterioNome === c.nome);
+        return {
+          criterioId: c.id,
+          conceito: existente ? (conceitoParaEnum[existente.conceito] || 'BOM') : 'BOM',
+          observacao: existente?.observacao || '',
+        };
+      }),
       feedbackGeral: project.feedback || '',
       rubricaAssinatura: project.avaliacaoDetalhes?.rubricaAssinatura || '',
     });
