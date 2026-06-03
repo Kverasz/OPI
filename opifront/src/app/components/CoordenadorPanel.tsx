@@ -8,7 +8,7 @@ interface Usuario {
   nome: string;
   email: string;
   senha: string;
-  tipo: 'aluno' | 'professor' | 'empresa';
+  tipo: 'aluno' | 'professor' | 'empresa' | 'coordenador';
   turma?: string;
   turmaId?: number;
   turmaIds?: number[];
@@ -74,7 +74,7 @@ const conceitoDisplay: Record<string, string> = {
 
 export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanelProps) {
   const [currentView, setCurrentView] = useState<'dashboard' | 'usuarios' | 'projetos' | 'grupos' | 'turmas'>('dashboard');
-  const [userTypeFilter, setUserTypeFilter] = useState<'todos' | 'aluno' | 'professor' | 'empresa'>('todos');
+  const [userTypeFilter, setUserTypeFilter] = useState<'todos' | 'aluno' | 'professor' | 'empresa' | 'coordenador'>('todos');
   const [buscaUsuario, setBuscaUsuario] = useState('');
   const [filtroUsuarioCurso, setFiltroUsuarioCurso] = useState('');
   const [filtroUsuarioTurmaId, setFiltroUsuarioTurmaId] = useState(0);
@@ -125,7 +125,7 @@ export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanel
           nome: u.nome,
           email: u.email,
           senha: '••••••',
-          tipo: u.perfil.toLowerCase() as 'aluno' | 'professor' | 'empresa',
+          tipo: u.perfil.toLowerCase() as 'aluno' | 'professor' | 'empresa' | 'coordenador',
           turma: u.turmas?.[0]?.nome || '',
           turmaId: u.turmas?.[0]?.id || 0,
           turmaIds: u.turmas?.map((t: any) => t.id) || [],
@@ -188,7 +188,7 @@ export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanel
     nome: '',
     email: '',
     senha: '',
-    tipo: 'aluno' as 'aluno' | 'professor' | 'empresa',
+    tipo: 'aluno' as 'aluno' | 'professor' | 'empresa' | 'coordenador',
     turmaId: 0,
     turmaIds: [] as number[],
     curso: ''
@@ -376,6 +376,7 @@ export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanel
       case 'aluno': return '#003D7A';
       case 'professor': return '#FF6B00';
       case 'empresa': return '#5CB85C';
+      case 'coordenador': return '#9B59B6';
       default: return '#6C757D';
     }
   };
@@ -413,6 +414,7 @@ export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanel
   const totalAlunos = usuarios.filter(u => u.tipo === 'aluno').length;
   const totalProfessores = usuarios.filter(u => u.tipo === 'professor').length;
   const totalEmpresas = usuarios.filter(u => u.tipo === 'empresa').length;
+  const totalCoordenadores = usuarios.filter(u => u.tipo === 'coordenador').length;
   const totalProjetos = dashboardData?.total_projetos || projetos.length;
   const projetosPendentes = dashboardData?.por_status?.PENDENTE || projetos.filter(p => p.status === 'Pendente').length;
   const projetosAvaliados = dashboardData?.por_status?.AVALIADO || projetos.filter(p => p.status === 'Avaliado').length;
@@ -684,7 +686,8 @@ export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanel
                 { key: 'todos',     label: `Todos (${usuarios.length})`,          cor: '#003D7A' },
                 { key: 'aluno',     label: `Alunos (${totalAlunos})`,             cor: '#003D7A' },
                 { key: 'professor', label: `Professores (${totalProfessores})`,   cor: '#FF6B00' },
-                { key: 'empresa',   label: `Empresas (${totalEmpresas})`,         cor: '#5CB85C' },
+                { key: 'empresa',      label: `Empresas (${totalEmpresas})`,         cor: '#5CB85C' },
+                { key: 'coordenador', label: `Coordenadores (${totalCoordenadores})`, cor: '#9B59B6' },
               ] as const).map(({ key, label, cor }) => (
                 <button key={key}
                   onClick={() => { setUserTypeFilter(key as any); setFiltroUsuarioCurso(''); setFiltroUsuarioTurmaId(0); }}
@@ -1215,10 +1218,11 @@ export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanel
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block mb-2 font-medium">Tipo de Usuário</label>
-                  <select value={formData.tipo} onChange={(e) => setFormData({ ...formData, tipo: e.target.value as 'aluno' | 'professor' | 'empresa' })} className="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2" style={{ borderColor: 'var(--color-border)' }} required>
+                  <select value={formData.tipo} onChange={(e) => setFormData({ ...formData, tipo: e.target.value as 'aluno' | 'professor' | 'empresa' | 'coordenador' })} className="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2" style={{ borderColor: 'var(--color-border)' }} required>
                     <option value="aluno">Aluno</option>
                     <option value="professor">Professor</option>
                     <option value="empresa">Empresa</option>
+                    <option value="coordenador">Coordenador</option>
                   </select>
                 </div>
                 <div>
