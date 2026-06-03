@@ -79,11 +79,13 @@ export function AlunoPanel({ onLogout, userName }: AlunoPanelProps) {
   const [myChannel, setMyChannel] = useState('');
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(true);
+  const [loadingCall, setLoadingCall] = useState(false);
   const [peersInRoom, setPeersInRoom] = useState<{id: number; nome: string; channel: string}[]>([]);
   const [remotePeers, setRemotePeers] = useState<{id: number; nome: string; channel: string; stream?: MediaStream}[]>([]);
   const localStreamRef = useRef<MediaStream | null>(null);
   const localVideoRef = useRef<HTMLVideoElement>(null);
-  const videoWsRef = useRef<WebSocket | null>(null);
+  const videoWsRef = useRef<WebSocket | null>(null);  // WS de presença (aba vídeo)
+  const callWsRef = useRef<WebSocket | null>(null);   // WS dedicado à chamada
   const pcRefs = useRef<Record<string, RTCPeerConnection>>({});
   const pendingIce = useRef<Record<string, RTCIceCandidateInit[]>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -432,16 +434,21 @@ export function AlunoPanel({ onLogout, userName }: AlunoPanelProps) {
     }
   };
 
-  const ICE_SERVERS = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+  const ICE_SERVERS = {
+    iceServers: [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' },
+    ]
+  };
 
-  function criarPeerConnection(channel: string) {
+  function criarPeerConnection(channel: string, callWs: WebSocket) {
     const pc = new RTCPeerConnection(ICE_SERVERS);
     pcRefs.current[channel] = pc;
     localStreamRef.current?.getTracks().forEach(t => pc.addTrack(t, localStreamRef.current!));
 
     pc.onicecandidate = (e) => {
-      if (e.candidate && videoWsRef.current?.readyState === WebSocket.OPEN) {
-        videoWsRef.current.send(JSON.stringify({ type: 'ice-candidate', target: channel, payload: e.candidate.toJSON() }));
+      if (e.candidate && callWs.readyState === WebSocket.OPEN) {
+        callWs.send(JSON.stringify({ type: 'ice-candidate', target: channel, payload: e.candidate.toJSON() }));
       }
     };
 
@@ -451,13 +458,17 @@ export function AlunoPanel({ onLogout, userName }: AlunoPanelProps) {
       ));
     };
 
+    pc.onconnectionstatechange = () => {
+      if (pc.connectionState === 'failed') pc.restartIce();
+    };
+
     return pc;
   }
 
   async function addIceOrBuffer(channel: string, candidate: RTCIceCandidateInit) {
     const pc = pcRefs.current[channel];
     if (pc && pc.remoteDescription) {
-      await pc.addIceCandidate(new RTCIceCandidate(candidate));
+      await pc.addIceCandidate(new RTCIceCandidate(candidate)).catch(() => {});
     } else {
       if (!pendingIce.current[channel]) pendingIce.current[channel] = [];
       pendingIce.current[channel].push(candidate);
@@ -473,62 +484,82 @@ export function AlunoPanel({ onLogout, userName }: AlunoPanelProps) {
     delete pendingIce.current[channel];
   }
 
-async function iniciarChamada() {
-    if (!selectedGroup) return;
+  async function iniciarChamada() {
+    if (!selectedGroup || loadingCall || inCall) return;
+    setLoadingCall(true);
+
+    let stream: MediaStream;
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      localStreamRef.current = stream;
+      stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    } catch {
+      alert('Não foi possível acessar câmera/microfone.\nVerifique as permissões do navegador.');
+      setLoadingCall(false);
+      return;
+    }
+
+    localStreamRef.current = stream;
+
+    // Cria WS dedicado à chamada (separado do WS de presença)
+    const token = localStorage.getItem('opi_token');
+    const wsUrl = `${(import.meta.env.VITE_WS_URL || 'ws://127.0.0.1:8000')}/ws/video-grupo/${selectedGroup}/?token=${token}`;
+    const callWs = new WebSocket(wsUrl);
+    callWsRef.current = callWs;
+
+    callWs.onopen = () => {
       setInCall(true);
+      setLoadingCall(false);
+    };
 
-      const ws = videoWsRef.current;
-      if (!ws || ws.readyState !== WebSocket.OPEN) {
-        // WS ainda não abriu — aguarda e tenta de novo
-        setTimeout(iniciarChamada, 500);
-        return;
-      }
+    callWs.onerror = () => {
+      stream.getTracks().forEach(t => t.stop());
+      localStreamRef.current = null;
+      callWsRef.current = null;
+      setLoadingCall(false);
+      alert('Erro ao conectar na chamada. Verifique sua conexão.');
+    };
 
-      // Registra handler de signaling no WS já aberto
-      ws.onmessage = async (event) => {
-        const data = JSON.parse(event.data);
+    callWs.onmessage = async (event) => {
+      const data = JSON.parse(event.data);
 
-        if (data.type === 'room-status') {
-          setMyChannel(data.my_channel);
-          setPeersInRoom(data.participants || []);
-          // Envia offer para cada participante já na sala
-          for (const peer of (data.participants || [])) {
-            setRemotePeers(prev => [...prev.filter(p => p.channel !== peer.channel), { id: peer.user_id, nome: peer.user_nome, channel: peer.channel }]);
-            const pc = criarPeerConnection(peer.channel);
-            const offer = await pc.createOffer();
-            await pc.setLocalDescription(offer);
-            ws.send(JSON.stringify({ type: 'offer', target: peer.channel, payload: offer }));
-          }
-        } else if (data.type === 'peer-joined') {
-          setPeersInRoom(prev => [...prev.filter(p => p.channel !== data.channel), { id: data.user_id, nome: data.user_nome, channel: data.channel }]);
-          setRemotePeers(prev => [...prev.filter(p => p.channel !== data.channel), { id: data.user_id, nome: data.user_nome, channel: data.channel }]);
-        } else if (data.type === 'offer') {
-          setRemotePeers(prev => [...prev.filter(p => p.channel !== data.from_channel), { id: data.from_user_id, nome: data.from_user_nome, channel: data.from_channel }]);
-          const pc = criarPeerConnection(data.from_channel);
+      if (data.type === 'room-status') {
+        setMyChannel(data.my_channel);
+        setPeersInRoom(data.participants || []);
+        for (const peer of (data.participants || [])) {
+          setRemotePeers(prev => [...prev.filter(p => p.channel !== peer.channel),
+            { id: peer.user_id, nome: peer.user_nome, channel: peer.channel }]);
+          const pc = criarPeerConnection(peer.channel, callWs);
+          const offer = await pc.createOffer();
+          await pc.setLocalDescription(offer);
+          callWs.send(JSON.stringify({ type: 'offer', target: peer.channel, payload: offer }));
+        }
+      } else if (data.type === 'peer-joined') {
+        setPeersInRoom(prev => [...prev.filter(p => p.channel !== data.channel),
+          { id: data.user_id, nome: data.user_nome, channel: data.channel }]);
+        setRemotePeers(prev => [...prev.filter(p => p.channel !== data.channel),
+          { id: data.user_id, nome: data.user_nome, channel: data.channel }]);
+      } else if (data.type === 'offer') {
+        setRemotePeers(prev => [...prev.filter(p => p.channel !== data.from_channel),
+          { id: data.from_user_id, nome: data.from_user_nome, channel: data.from_channel }]);
+        const pc = criarPeerConnection(data.from_channel, callWs);
+        await pc.setRemoteDescription(new RTCSessionDescription(data.payload));
+        await flushIce(data.from_channel);
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        callWs.send(JSON.stringify({ type: 'answer', target: data.from_channel, payload: answer }));
+      } else if (data.type === 'answer') {
+        const pc = pcRefs.current[data.from_channel];
+        if (pc) {
           await pc.setRemoteDescription(new RTCSessionDescription(data.payload));
           await flushIce(data.from_channel);
-          const answer = await pc.createAnswer();
-          await pc.setLocalDescription(answer);
-          ws.send(JSON.stringify({ type: 'answer', target: data.from_channel, payload: answer }));
-        } else if (data.type === 'answer') {
-          const pc = pcRefs.current[data.from_channel];
-          if (pc) { await pc.setRemoteDescription(new RTCSessionDescription(data.payload)); await flushIce(data.from_channel); }
-        } else if (data.type === 'ice-candidate') {
-          await addIceOrBuffer(data.from_channel, data.payload);
-        } else if (data.type === 'peer-left') {
-          Object.entries(pcRefs.current).forEach(([ch, pc]) => {
-            if (remotePeers.find(p => p.id === data.user_id && p.channel === ch)) pc.close();
-          });
-          setRemotePeers(prev => prev.filter(p => p.id !== data.user_id));
-          setPeersInRoom(prev => prev.filter(p => p.id !== data.user_id));
         }
-      };
-    } catch (e) {
-      alert('Não foi possível acessar câmera/microfone. Verifique as permissões do navegador.');
-    }
+      } else if (data.type === 'ice-candidate') {
+        await addIceOrBuffer(data.from_channel, data.payload);
+      } else if (data.type === 'peer-left') {
+        pcRefs.current[data.user_id] && pcRefs.current[data.user_id]?.close();
+        setRemotePeers(prev => prev.filter(p => p.id !== data.user_id));
+        setPeersInRoom(prev => prev.filter(p => p.id !== data.user_id));
+      }
+    };
   }
 
   function sairDaChamada() {
@@ -537,10 +568,10 @@ async function iniciarChamada() {
     Object.values(pcRefs.current).forEach(pc => pc.close());
     pcRefs.current = {};
     pendingIce.current = {};
-    // Fecha WS — o useEffect vai reabrir em modo presença
-    videoWsRef.current?.close();
-    videoWsRef.current = null;
+    callWsRef.current?.close();
+    callWsRef.current = null;
     setInCall(false);
+    setLoadingCall(false);
     setRemotePeers([]);
     setMyChannel('');
     setMicOn(true);
@@ -1681,21 +1712,27 @@ async function iniciarChamada() {
                               ) : (
                                 <p className="text-sm text-muted-foreground mb-6">Conecte-se com sua equipe em tempo real</p>
                               )}
-                              <button onClick={iniciarChamada}
-                                className="px-8 py-3 text-white rounded-lg hover:opacity-90 transition-all font-medium"
+                              <button onClick={iniciarChamada} disabled={loadingCall}
+                                className="px-8 py-3 text-white rounded-lg hover:opacity-90 transition-all font-medium disabled:opacity-60 flex items-center gap-2 mx-auto"
                                 style={{ backgroundColor: peersInRoom.length > 0 ? '#5CB85C' : '#003D7A' }}>
-                                <Video className="w-5 h-5 inline mr-2" />
-                                {peersInRoom.length > 0 ? 'Entrar na Chamada' : 'Iniciar Chamada'}
+                                {loadingCall
+                                  ? <><div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> Conectando...</>
+                                  : <><Video className="w-5 h-5" />{peersInRoom.length > 0 ? 'Entrar na Chamada' : 'Iniciar Chamada'}</>
+                                }
                               </button>
                             </div>
                           </div>
                         ) : (
-                          <div className="flex-1 flex flex-col">
+                          <div className="flex flex-col" style={{ height: '500px' }}>
                             {/* Grade de vídeos */}
-                            <div className="flex-1 bg-gray-900 p-3 grid gap-2"
-                              style={{ gridTemplateColumns: remotePeers.length === 0 ? '1fr' : remotePeers.length === 1 ? '1fr 1fr' : 'repeat(auto-fit, minmax(180px, 1fr))' }}>
+                            <div className="bg-gray-900 p-3 grid gap-2" style={{
+                              flex: 1,
+                              minHeight: 0,
+                              gridTemplateColumns: remotePeers.length === 0 ? '1fr' : remotePeers.length === 1 ? '1fr 1fr' : 'repeat(auto-fit, minmax(180px, 1fr))',
+                              gridAutoRows: '1fr',
+                            }}>
                               {/* Vídeo local */}
-                              <div className="relative rounded-lg overflow-hidden bg-gray-800 flex items-center justify-center">
+                              <div className="relative rounded-lg overflow-hidden bg-gray-800 flex items-center justify-center" style={{ minHeight: '120px' }}>
                                 <video ref={localVideoRef} autoPlay muted playsInline
                                   className="w-full h-full object-cover"
                                   style={{ transform: 'scaleX(-1)' }} />
