@@ -1216,10 +1216,10 @@ export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanel
                   <div className="max-h-48 overflow-y-auto border rounded-lg p-2" style={{ borderColor: 'var(--color-border)' }}>
                     {!grupoFormData.turma_id ? (
                       <p className="text-sm text-muted-foreground p-2">Selecione uma turma para ver os alunos disponíveis.</p>
-                    ) : usuarios.filter(u => u.tipo === 'aluno' && u.turmaId === grupoFormData.turma_id).length === 0 ? (
+                    ) : usuarios.filter(u => u.tipo === 'aluno' && (u.turmaIds?.includes(grupoFormData.turma_id) || u.turmaId === grupoFormData.turma_id)).length === 0 ? (
                       <p className="text-sm text-muted-foreground p-2">Nenhum aluno nesta turma.</p>
                     ) : (
-                      usuarios.filter(u => u.tipo === 'aluno' && u.turmaId === grupoFormData.turma_id).map((usuario) => (
+                      usuarios.filter(u => u.tipo === 'aluno' && (u.turmaIds?.includes(grupoFormData.turma_id) || u.turmaId === grupoFormData.turma_id)).map((usuario) => (
                         <label key={usuario.id} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
                           <input type="checkbox" checked={grupoFormData.membros_ids.includes(usuario.id)} onChange={(e) => { if (e.target.checked) { setGrupoFormData({ ...grupoFormData, membros_ids: [...grupoFormData.membros_ids, usuario.id] }); } else { setGrupoFormData({ ...grupoFormData, membros_ids: grupoFormData.membros_ids.filter(id => id !== usuario.id) }); } }} />
                           <span className="text-sm">{usuario.nome}</span>
