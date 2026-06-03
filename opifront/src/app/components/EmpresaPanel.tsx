@@ -639,16 +639,24 @@ export function EmpresaPanel({ onLogout, empresaNome }: EmpresaPanelProps) {
                     <h5 className="font-medium mb-3" style={{ color: '#003D7A' }}>Projetos Avaliados</h5>
                     <div className="space-y-2">
                       {viewingProfile.projetos.map(p => (
-                        <div key={p.id} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 border border-border">
+                        <button key={p.id}
+                          onClick={() => {
+                            const proj = projetos.find(x => x.id === p.id);
+                            if (proj) { setViewingProject(proj); setViewingProfile(null); }
+                          }}
+                          className="w-full flex items-center justify-between p-3 rounded-lg bg-gray-50 border border-border hover:bg-blue-50 hover:border-blue-200 transition-all text-left">
                           <div className="flex items-center gap-2">
                             <Award className="w-4 h-4 flex-shrink-0" style={{ color: '#FF6B00' }} />
                             <span className="text-sm font-medium">{p.titulo}</span>
                           </div>
-                          <span className="px-2 py-1 rounded-full text-xs text-white flex-shrink-0"
-                            style={{ backgroundColor: getConceitoColor(p.conceito) }}>
-                            {p.conceito}
-                          </span>
-                        </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <span className="px-2 py-1 rounded-full text-xs text-white"
+                              style={{ backgroundColor: getConceitoColor(p.conceito) }}>
+                              {p.conceito}
+                            </span>
+                            <Eye className="w-3 h-3 text-muted-foreground" />
+                          </div>
+                        </button>
                       ))}
                     </div>
                   </div>
