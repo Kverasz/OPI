@@ -114,14 +114,15 @@ class VideoCallConsumer(AsyncWebsocketConsumer):
         # Registra na sala
         if self.room_group not in self.active_rooms:
             self.active_rooms[self.room_group] = {}
+        nome = self.user.nome or f'Usuário {self.user.id}'
         self.active_rooms[self.room_group][self.channel_name] = {
             'user_id': self.user.id,
-            'user_nome': self.user.nome,
+            'user_nome': nome,
         }
 
         # Envia ao novo joiner a lista de quem já está na sala
         outros = [
-            {'user_id': v['user_id'], 'user_nome': v['user_nome'], 'channel': k}
+            {'user_id': v['user_id'], 'user_nome': v['user_nome'] or f'Usuário {v["user_id"]}', 'channel': k}
             for k, v in self.active_rooms[self.room_group].items()
             if k != self.channel_name
         ]
@@ -135,7 +136,7 @@ class VideoCallConsumer(AsyncWebsocketConsumer):
         await self.channel_layer.group_send(self.room_group, {
             'type': 'peer_joined',
             'user_id': self.user.id,
-            'user_nome': self.user.nome,
+            'user_nome': nome,
             'from_channel': self.channel_name,
         })
 
@@ -164,7 +165,7 @@ class VideoCallConsumer(AsyncWebsocketConsumer):
                 'signal_type': msg_type,
                 'payload': data.get('payload'),
                 'from_user_id': self.user.id,
-                'from_user_nome': self.user.nome,
+                'from_user_nome': self.user.nome or f'Usuário {self.user.id}',
                 'from_channel': self.channel_name,
             })
 

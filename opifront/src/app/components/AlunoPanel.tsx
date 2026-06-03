@@ -1728,7 +1728,7 @@ export function AlunoPanel({ onLogout, userName }: AlunoPanelProps) {
                                     ))}
                                   </div>
                                   <p className="text-sm text-green-600 font-medium mb-4">
-                                    {peersInRoom.map(p => p.nome).join(', ')} {peersInRoom.length === 1 ? 'está' : 'estão'} na chamada
+                                    {peersInRoom.map(p => p.nome || 'Participante').join(', ')} {peersInRoom.length === 1 ? 'está' : 'estão'} na chamada
                                   </p>
                                 </>
                               ) : (
