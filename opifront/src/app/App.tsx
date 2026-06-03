@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BookOpen, Users, GraduationCap, Building2, Heart, MessageSquare, Eye, EyeOff, ChevronDown } from 'lucide-react';
 import { SenacLogo } from './components/SenacLogo';
 import { AlunoPanel } from './components/AlunoPanel';
@@ -21,6 +21,28 @@ export default function App() {
   const [userName, setUserName] = useState('');
   const [loginError, setLoginError] = useState('');
   const [loggedUserType, setLoggedUserType] = useState<'aluno' | 'coordenador' | 'professor' | 'empresa'>('aluno');
+  const [restoring, setRestoring] = useState(true);
+
+  // Restaurar sessão ao recarregar a página
+  useEffect(() => {
+    const token = localStorage.getItem('opi_token');
+    if (!token) { setRestoring(false); return; }
+    const BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api';
+    fetch(`${BASE}/auth/me/`, { headers: { 'Authorization': `Bearer ${token}` } })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.id) {
+          setIsLoggedIn(true);
+          setUserName(data.nome);
+          setLoggedUserType(data.perfil.toLowerCase() as 'aluno' | 'coordenador' | 'professor' | 'empresa');
+        } else {
+          localStorage.removeItem('opi_token');
+          localStorage.removeItem('opi_refresh');
+        }
+      })
+      .catch(() => {})
+      .finally(() => setRestoring(false));
+  }, []);
 
   // Credenciais de todos os usuários do sistema
   const allUsers: UserCredential[] = [
@@ -67,12 +89,25 @@ export default function App() {
   };
 
   const handleLogout = () => {
+    localStorage.removeItem('opi_token');
+    localStorage.removeItem('opi_refresh');
     setIsLoggedIn(false);
     setEmail('');
     setPassword('');
     setUserName('');
     setLoginError('');
   };
+
+  if (restoring) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(to bottom right, #E6F2FF, #FFFFFF)' }}>
+        <div className="text-center">
+          <SenacLogo className="h-16 mx-auto mb-4" />
+          <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoggedIn) {
     if (loggedUserType === 'coordenador') {
