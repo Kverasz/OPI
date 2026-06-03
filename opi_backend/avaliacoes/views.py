@@ -1,4 +1,4 @@
-from rest_framework import viewsets, generics, status
+﻿from rest_framework import viewsets, generics, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -14,7 +14,7 @@ from usuarios.permissions import IsProfessor, IsCoordenador, IsCoordenadorOrProf
 
 
 class CriterioRubricaViewSet(viewsets.ModelViewSet):
-    """CRUD dos critérios de rubrica — apenas Coordenador"""
+    """CRUD dos critérios de rubrica - apenas Coordenador"""
     queryset = CriterioRubrica.objects.all().order_by('ordem')
     serializer_class = CriterioRubricaSerializer
 
@@ -26,11 +26,11 @@ class CriterioRubricaViewSet(viewsets.ModelViewSet):
 
 class AvaliacaoViewSet(viewsets.ModelViewSet):
     """
-    Avaliações — professor cria, coordenador vê tudo.
-    POST /api/avaliacoes/              — cria avaliação
-    GET  /api/avaliacoes/              — lista
-    GET  /api/avaliacoes/{id}/         — detalhe
-    POST /api/avaliacoes/iniciar/{projeto_id}/ — marca projeto EM_AVALIACAO
+    Avaliações - professor cria, coordenador vê tudo.
+    POST /api/avaliacoes/              - cria avaliação
+    GET  /api/avaliacoes/              - lista
+    GET  /api/avaliacoes/{id}/         - detalhe
+    POST /api/avaliacoes/iniciar/{projeto_id}/ - marca projeto EM_AVALIACAO
     """
     permission_classes = [IsCoordenadorOrProfessor]
 

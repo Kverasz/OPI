@@ -127,7 +127,7 @@ class ProjetoViewSet(viewsets.ModelViewSet):
 
 class PortfolioPublicoView(generics.ListAPIView):
     """
-    GET /api/portfolio/ — projetos avaliados para empresas parceiras.
+    GET /api/portfolio/ - projetos avaliados para empresas parceiras.
     Filtros: tecnologia, area_tematica, ano
     """
     permission_classes = [IsAuthenticated]
@@ -164,7 +164,7 @@ class PortfolioPublicoView(generics.ListAPIView):
 
 class DashboardCoordenadorView(generics.GenericAPIView):
     """
-    GET /api/dashboard/ — indicadores para o coordenador.
+    GET /api/dashboard/ - indicadores para o coordenador.
     """
     permission_classes = [IsCoordenador]
 
@@ -200,7 +200,7 @@ class DashboardCoordenadorView(generics.GenericAPIView):
 
 class GrupoViewSet(viewsets.ModelViewSet):
     """
-    CRUD de grupos — Coordenador cria, aluno visualiza os seus.
+    CRUD de grupos - Coordenador cria, aluno visualiza os seus.
     """
     pagination_class = None
     permission_classes = [IsAuthenticated]

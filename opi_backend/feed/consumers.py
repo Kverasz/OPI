@@ -1,4 +1,4 @@
-import json
+﻿import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 
@@ -89,7 +89,7 @@ class ChatGrupoConsumer(AsyncWebsocketConsumer):
 
 
 class VideoCallConsumer(AsyncWebsocketConsumer):
-    """Signaling server para WebRTC — retransmite offer/answer/ICE entre peers."""
+    """Signaling server para WebRTC - retransmite offer/answer/ICE entre peers."""
 
     # Rastreia participantes ativos: {room_group: {channel_name: {user_id, user_nome}}}
     active_rooms: dict = {}

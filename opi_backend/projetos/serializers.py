@@ -1,4 +1,4 @@
-from rest_framework import serializers
+﻿from rest_framework import serializers
 from .models import Projeto, ProjetoMembro, ProjetoTecnologia, ProjetoArquivo, HistoricoVersao
 from usuarios.serializers import UsuarioSerializer, TurmaSerializer
 from .models import Projeto, ProjetoMembro, ProjetoTecnologia, ProjetoArquivo, HistoricoVersao, Grupo
@@ -252,7 +252,7 @@ class ProjetoCriarSerializer(serializers.ModelSerializer):
         if request.user.is_coordenador:
             novo_status = instance.status
             if novo_status != 'AVALIADO':
-                # Reverteu status — apaga avaliação existente
+                # Reverteu status - apaga avaliação existente
                 Avaliacao.objects.filter(projeto=instance).delete()
             elif conceito:
                 # Mantém ou cria avaliação com o conceito definido

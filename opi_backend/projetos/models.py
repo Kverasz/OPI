@@ -1,4 +1,4 @@
-from django.db import models
+﻿from django.db import models
 from django.core.exceptions import ValidationError
 from usuarios.models import Usuario, Turma
 
@@ -21,7 +21,7 @@ class Grupo(models.Model):
         ordering = ['-criado_em']
 
     def __str__(self):
-        return f'{self.nome} — {self.turma}'
+        return f'{self.nome} - {self.turma}'
 
 class Projeto(models.Model):
     STATUS = [

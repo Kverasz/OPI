@@ -1,4 +1,4 @@
-from django.db import models
+﻿from django.db import models
 from usuarios.models import Usuario
 from projetos.models import Projeto
 
@@ -39,7 +39,7 @@ class Avaliacao(models.Model):
         db_table = 'avaliacoes'
 
     def __str__(self):
-        return f'Avaliação — {self.projeto.titulo} — {self.conceito}'
+        return f'Avaliação - {self.projeto.titulo} - {self.conceito}'
 
 
 class AvaliacaoCriterio(models.Model):

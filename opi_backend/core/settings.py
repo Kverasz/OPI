@@ -1,4 +1,4 @@
-from pathlib import Path
+﻿from pathlib import Path
 from datetime import timedelta
 import os
 
@@ -10,7 +10,7 @@ DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = ['*']
 
-# Railway usa proxy reverso — necessário para HTTPS e host corretos
+# Railway usa proxy reverso - necessário para HTTPS e host corretos
 USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
@@ -66,7 +66,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'core.wsgi.application'
 
-# Banco de dados — usa DATABASE_URL em produção, local em dev
+# Banco de dados - usa DATABASE_URL em produção, local em dev
 DATABASE_URL = os.environ.get('DATABASE_URL')
 if DATABASE_URL:
     import dj_database_url

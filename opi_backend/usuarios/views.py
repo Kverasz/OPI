@@ -15,7 +15,7 @@ from .permissions import IsCoordenador
 
 
 class LoginView(generics.GenericAPIView):
-    """POST /api/auth/login/ — autentica e retorna tokens JWT + dados do usuário"""
+    """POST /api/auth/login/ - autentica e retorna tokens JWT + dados do usuário"""
     permission_classes = [AllowAny]
     serializer_class = LoginSerializer
 
@@ -32,7 +32,7 @@ class LoginView(generics.GenericAPIView):
 
 
 class LogoutView(generics.GenericAPIView):
-    """POST /api/auth/logout/ — invalida o refresh token"""
+    """POST /api/auth/logout/ - invalida o refresh token"""
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
@@ -45,7 +45,7 @@ class LogoutView(generics.GenericAPIView):
 
 
 class MeuPerfilView(generics.RetrieveUpdateAPIView):
-    """GET/PATCH /api/auth/me/ — perfil do usuário logado"""
+    """GET/PATCH /api/auth/me/ - perfil do usuário logado"""
     permission_classes = [IsAuthenticated]
     serializer_class = UsuarioSerializer
 
@@ -57,13 +57,8 @@ class MeuPerfilView(generics.RetrieveUpdateAPIView):
 
 
 class UsuarioViewSet(viewsets.ModelViewSet):
-    """Gerenciamento de usuários — apenas Coordenador."""
+    """Gerenciamento de usuarios - apenas Coordenador."""
     pagination_class = None
-    PATCH  /api/usuarios/{id}/      edita
-    DELETE /api/usuarios/{id}/      desativa (soft delete)
-    POST   /api/usuarios/{id}/redefinir_senha/
-    POST   /api/usuarios/{id}/vincular_turma/
-    """
     permission_classes = [IsCoordenador]
     queryset = Usuario.objects.all().order_by('nome')
 
@@ -86,7 +81,7 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         return qs
 
     def destroy(self, request, *args, **kwargs):
-        """Hard delete — remove o usuário e todos os dados vinculados do banco."""
+        """Hard delete - remove o usuário e todos os dados vinculados do banco."""
         usuario = self.get_object()
 
         # Apaga projetos criados por este usuário (cascata limpa membros, tecnologias, arquivos, histórico)
@@ -132,7 +127,7 @@ class UsuarioViewSet(viewsets.ModelViewSet):
 
 
 class TurmaViewSet(viewsets.ModelViewSet):
-    """CRUD de turmas — apenas Coordenador"""
+    """CRUD de turmas - apenas Coordenador"""
     permission_classes = [IsCoordenador]
     queryset = Turma.objects.all().order_by('-ano', '-semestre')
     serializer_class = TurmaSerializer

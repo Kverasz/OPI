@@ -1,4 +1,4 @@
-from rest_framework import generics, status
+﻿from rest_framework import generics, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -17,7 +17,7 @@ from .models import CanalGrupo, MensagemGrupo
 
 class FeedView(generics.ListAPIView):
     """
-    GET /api/feed/ — projetos ordenados por curtidas.
+    GET /api/feed/ - projetos ordenados por curtidas.
     Acessível a Aluno, Professor e Empresa autenticados.
     Filtros: turma_id, area_tematica, tecnologia, conceito
     """
@@ -81,7 +81,7 @@ def curtir_projeto(request, projeto_id):
 
 
 class NotificacaoListView(generics.ListAPIView):
-    """GET /api/notificacoes/ — notificações do usuário logado"""
+    """GET /api/notificacoes/ - notificações do usuário logado"""
     permission_classes = [IsAuthenticated]
     serializer_class = NotificacaoSerializer
 
@@ -103,7 +103,7 @@ def marcar_notificacao_lida(request, pk):
 
 class ChatView(generics.RetrieveAPIView):
     """
-    GET /api/chat/{projeto_id}/ — canal do grupo + mensagens.
+    GET /api/chat/{projeto_id}/ - canal do grupo + mensagens.
     RN-07: apenas membros do grupo acessam.
     """
     permission_classes = [IsAuthenticated]
@@ -124,7 +124,7 @@ class ChatView(generics.RetrieveAPIView):
 
         canal, _ = CanalChat.objects.get_or_create(
             projeto=projeto,
-            defaults={'nome': f'Chat — {projeto.titulo}'}
+            defaults={'nome': f'Chat - {projeto.titulo}'}
         )
         return canal
 
@@ -143,7 +143,7 @@ def enviar_mensagem(request, projeto_id):
 
     canal, _ = CanalChat.objects.get_or_create(
         projeto=projeto,
-        defaults={'nome': f'Chat — {projeto.titulo}'}
+        defaults={'nome': f'Chat - {projeto.titulo}'}
     )
     conteudo = request.data.get('conteudo', '').strip()
     if not conteudo:
@@ -175,7 +175,7 @@ def _serializar_mensagem(m, request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def chat_grupo(request, grupo_id):
-    """GET /api/chat-grupo/{grupo_id}/ — mensagens do canal do grupo"""
+    """GET /api/chat-grupo/{grupo_id}/ - mensagens do canal do grupo"""
     grupo = Grupo.objects.filter(id=grupo_id).first()
     if not grupo:
         return Response({'detail': 'Grupo não encontrado.'}, status=404)
@@ -192,7 +192,7 @@ def chat_grupo(request, grupo_id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def enviar_mensagem_grupo(request, grupo_id):
-    """POST /api/chat-grupo/{grupo_id}/mensagens/ — texto ou arquivo (multipart)"""
+    """POST /api/chat-grupo/{grupo_id}/mensagens/ - texto ou arquivo (multipart)"""
     grupo = Grupo.objects.filter(id=grupo_id).first()
     if not grupo:
         return Response({'detail': 'Grupo não encontrado.'}, status=404)
