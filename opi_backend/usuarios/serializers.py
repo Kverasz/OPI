@@ -25,10 +25,29 @@ class UsuarioSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'criado_em', 'ultimo_acesso']
 
+    def _curso_da_turma(self, nome):
+        n = nome.upper()
+        if n.startswith('ADS'): return 'ADS'
+        if n.startswith('DESIGN'): return 'DESIGN'
+        if n.startswith('GASTRO'): return 'GASTRO'
+        return nome
+
     def update(self, instance, validated_data):
         turma_ids = validated_data.pop('turma_ids', None)
         instance = super().update(instance, validated_data)
         if turma_ids is not None:
+            # Aluno: valida uma turma por curso
+            if instance.perfil == 'ALUNO':
+                turmas = [t for t in (Turma.objects.filter(id__in=turma_ids)) if t]
+                cursos_vistos = set()
+                for t in turmas:
+                    curso = self._curso_da_turma(t.nome)
+                    if curso in cursos_vistos:
+                        raise serializers.ValidationError(
+                            f'Aluno so pode ter uma turma por curso. Curso duplicado: {curso}'
+                        )
+                    cursos_vistos.add(curso)
+
             UsuarioTurma.objects.filter(usuario=instance).delete()
             papel = 'PROFESSOR' if instance.perfil == 'PROFESSOR' else 'ALUNO'
             for tid in turma_ids:

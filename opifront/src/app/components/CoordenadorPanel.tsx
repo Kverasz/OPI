@@ -217,7 +217,8 @@ export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanel
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const turmaIds = formData.tipo === 'professor'
+    // Alunos e professores usam turmaIds (múltiplas turmas)
+    const turmaIds = formData.turmaIds.length > 0
       ? formData.turmaIds
       : formData.turmaId ? [formData.turmaId] : [];
     if (editingUser) {
@@ -770,7 +771,11 @@ export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanel
                   </div>
                   <div className="space-y-2 mb-4 text-sm">
                     <p className="text-muted-foreground"><strong>E-mail:</strong> {usuario.email}</p>
-                    {usuario.turma && <p className="text-muted-foreground"><strong>Turma:</strong> {usuario.turma}</p>}
+                    {usuario.turmaIds && usuario.turmaIds.length > 0 && (
+                      <p className="text-muted-foreground"><strong>Turma(s):</strong> {
+                        usuario.turmaIds.map(id => turmasDisponiveis.find(t => t.id === id)?.nome || id).join(', ')
+                      }</p>
+                    )}
                     {usuario.curso && <p className="text-muted-foreground"><strong>Curso:</strong> {usuario.curso}</p>}
                     <p className="text-muted-foreground"><strong>Senha:</strong> {usuario.senha}</p>
                   </div>
@@ -1311,34 +1316,56 @@ export function CoordenadorPanel({ onLogout, coordenadorNome }: CoordenadorPanel
                   <input type="text" value={formData.senha} onChange={(e) => setFormData({ ...formData, senha: e.target.value })} className="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2" style={{ borderColor: 'var(--color-border)' }} required />
                 </div>
                 {formData.tipo === 'aluno' && (
-                  <>
-                    <div>
-                      <label className="block mb-2 font-medium">Curso</label>
-                      <select value={formData.curso} onChange={(e) => setFormData({ ...formData, curso: e.target.value, turmaId: 0 })} className="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2 bg-white" style={{ borderColor: 'var(--color-border)', color: '#003D7A' }}>
-                        <option value="">Selecione um curso</option>
-                        <option value="Design">Design</option>
-                        <option value="Análise e Desenvolvimento de Sistemas">Análise e Desenvolvimento de Sistemas</option>
-                        <option value="Gastronomia">Gastronomia</option>
-                      </select>
+                  <div>
+                    <label className="block mb-2 font-medium">Cursos e Turmas</label>
+                    <p className="text-xs text-muted-foreground mb-3">Selecione uma turma por curso (pode ter mais de um curso)</p>
+                    <div className="border rounded-lg overflow-hidden" style={{ borderColor: 'var(--color-border)' }}>
+                      {(['Análise e Desenvolvimento de Sistemas', 'Design', 'Gastronomia'] as const).map((curso, idx) => {
+                        const turmasDoCurso = turmasDisponiveis.filter(t => getCursoDaTurma(t.nome) === curso);
+                        const cor = curso === 'Design' ? '#FF6B00' : curso === 'Gastronomia' ? '#5CB85C' : '#9B59B6';
+                        const label = curso === 'Análise e Desenvolvimento de Sistemas' ? 'ADS' : curso;
+                        const turmasSelecionadasDoCurso = formData.turmaIds.filter(id => turmasDoCurso.some(t => t.id === id));
+                        const turmaSelecionada = turmasSelecionadasDoCurso[0] || 0;
+                        const ativo = turmaSelecionada > 0;
+                        return (
+                          <div key={curso} className={idx > 0 ? 'border-t' : ''} style={{ borderColor: 'var(--color-border)' }}>
+                            <div className="flex items-center gap-3 px-4 py-3" style={{ backgroundColor: `${cor}12` }}>
+                              <input type="checkbox" className="w-4 h-4 cursor-pointer"
+                                checked={ativo}
+                                onChange={() => {
+                                  if (ativo) {
+                                    setFormData({ ...formData, turmaIds: formData.turmaIds.filter(id => !turmasDoCurso.some(t => t.id === id)) });
+                                  } else {
+                                    // seleciona a primeira turma do curso por default
+                                    if (turmasDoCurso[0]) setFormData({ ...formData, turmaIds: [...formData.turmaIds, turmasDoCurso[0].id] });
+                                  }
+                                }}
+                              />
+                              <span className="font-medium text-sm" style={{ color: cor }}>{label}</span>
+                            </div>
+                            {ativo && (
+                              <div className="px-4 py-3">
+                                <select
+                                  value={turmaSelecionada}
+                                  onChange={(e) => {
+                                    const novoId = Number(e.target.value);
+                                    const semCurso = formData.turmaIds.filter(id => !turmasDoCurso.some(t => t.id === id));
+                                    setFormData({ ...formData, turmaIds: novoId ? [...semCurso, novoId] : semCurso });
+                                  }}
+                                  className="w-full px-3 py-2 border rounded-lg outline-none bg-white text-sm"
+                                  style={{ borderColor: 'var(--color-border)', color: '#003D7A' }}
+                                >
+                                  {turmasDoCurso.map(t => (
+                                    <option key={t.id} value={t.id}>{t.nome}</option>
+                                  ))}
+                                </select>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
-                    <div>
-                      <label className="block mb-2 font-medium">Turma</label>
-                      <select
-                        value={formData.turmaId}
-                        onChange={(e) => setFormData({ ...formData, turmaId: Number(e.target.value) })}
-                        disabled={!formData.curso}
-                        className="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2 bg-white disabled:opacity-50 disabled:cursor-not-allowed"
-                        style={{ borderColor: 'var(--color-border)', color: '#003D7A' }}
-                      >
-                        <option value={0}>{formData.curso ? 'Selecione uma turma' : 'Selecione um curso primeiro'}</option>
-                        {turmasDisponiveis
-                          .filter(t => getCursoDaTurma(t.nome) === formData.curso)
-                          .map(t => (
-                            <option key={t.id} value={t.id}>{t.nome}</option>
-                          ))}
-                      </select>
-                    </div>
-                  </>
+                  </div>
                 )}
                 {formData.tipo === 'professor' && (
                   <div>
