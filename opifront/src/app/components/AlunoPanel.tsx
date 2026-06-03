@@ -31,6 +31,7 @@ interface Project {
   conceito?: Conceito;
   feedback?: string;
   grupoId: number;
+  grupoNome?: string;
   autor?: string;
   curtidas?: number;
   curtidasUsuarios?: number[];
@@ -151,6 +152,7 @@ export function AlunoPanel({ onLogout, userName }: AlunoPanelProps) {
           feedback: p.feedback_geral || undefined,
           avaliacaoDetalhes: mapearAvaliacaoDetalhes(p),
           grupoId: p.grupo_id || 0,
+          grupoNome: p.grupo_nome || undefined,
           autor: p.criado_por?.nome || '',
           curtidas: p.total_curtidas || 0,
           curtidasUsuarios: p.usuario_curtiu ? [1] : [],
@@ -179,6 +181,7 @@ export function AlunoPanel({ onLogout, userName }: AlunoPanelProps) {
           feedback: p.feedback_geral || undefined,
           avaliacaoDetalhes: mapearAvaliacaoDetalhes(p),
           grupoId: p.grupo_id || 0,
+          grupoNome: p.grupo_nome || undefined,
           autor: p.criado_por?.nome || '',
           curtidas: p.total_curtidas || 0,
           curtidasUsuarios: p.usuario_curtiu ? [1] : [],
@@ -720,6 +723,7 @@ async function iniciarChamada() {
           feedback: p.feedback_geral || undefined,
           avaliacaoDetalhes: mapearAvaliacaoDetalhes(p),
           grupoId: p.grupo_id || 0,
+          grupoNome: p.grupo_nome || undefined,
           autor: p.criado_por?.nome || '',
           curtidas: p.total_curtidas || 0,
           curtidasUsuarios: p.usuario_curtiu ? [1] : [],
@@ -1312,7 +1316,7 @@ async function iniciarChamada() {
                           <div>
                             <h3 className="mb-1" style={{ color: '#003D7A' }}>{project.titulo}</h3>
                             <p className="text-xs text-muted-foreground">
-                              Por {project.autor} • {project.turma}
+                              {project.grupoNome ? `Grupo: ${project.grupoNome}` : project.autor} • {project.turma}
                             </p>
                           </div>
                           {project.conceito && (

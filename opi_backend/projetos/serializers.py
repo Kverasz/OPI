@@ -93,6 +93,7 @@ class ProjetoSerializer(serializers.ModelSerializer):
     avaliado_em = serializers.SerializerMethodField()
     rubrica_assinatura = serializers.SerializerMethodField()
     rubricas_avaliacao = serializers.SerializerMethodField()
+    grupo_nome = serializers.SerializerMethodField()
 
     class Meta:
         model = Projeto
@@ -103,7 +104,7 @@ class ProjetoSerializer(serializers.ModelSerializer):
             'tecnologias', 'arquivos', 'membros_detalhe',
             'total_curtidas', 'usuario_curtiu', 'conceito', 'feedback_geral',
             'avaliador_nome', 'avaliado_em', 'rubrica_assinatura', 'rubricas_avaliacao',
-            'publicado_no_feed', 'grupo_id'
+            'publicado_no_feed', 'grupo_id', 'grupo_nome'
         ]
 
     def get_total_curtidas(self, obj):
@@ -153,6 +154,11 @@ class ProjetoSerializer(serializers.ModelSerializer):
             }
             for c in obj.avaliacao.criterios.select_related('criterio').all()
         ]
+
+    def get_grupo_nome(self, obj):
+        if obj.grupo:
+            return obj.grupo.nome
+        return None
 
 
 class ProjetoCriarSerializer(serializers.ModelSerializer):
