@@ -8,7 +8,11 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-opi-senac-2026-troque
 
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
+ALLOWED_HOSTS = ['*']
+
+# Railway usa proxy reverso — necessário para HTTPS e host corretos
+USE_X_FORWARDED_HOST = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 INSTALLED_APPS = [
     'daphne',
