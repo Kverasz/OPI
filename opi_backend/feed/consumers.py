@@ -121,10 +121,11 @@ class VideoCallConsumer(AsyncWebsocketConsumer):
         }
 
         # Envia ao novo joiner a lista de quem já está na sala
+        # Exclui: próprio canal E canais do mesmo usuário (evita self-duplicata)
         outros = [
             {'user_id': v['user_id'], 'user_nome': v['user_nome'] or f'Usuário {v["user_id"]}', 'channel': k}
             for k, v in self.active_rooms[self.room_group].items()
-            if k != self.channel_name
+            if k != self.channel_name and v['user_id'] != self.user.id
         ]
         await self.send(text_data=json.dumps({
             'type': 'room-status',

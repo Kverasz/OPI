@@ -302,9 +302,11 @@ export function AlunoPanel({ onLogout, userName }: AlunoPanelProps) {
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
       if (data.type === 'room-status') {
-        setPeersInRoom(data.participants || []);
+        setPeersInRoom((data.participants || []).filter((p: any) => p.id !== profile.id && p.user_id !== profile.id));
       } else if (data.type === 'peer-joined') {
-        setPeersInRoom(prev => [...prev.filter(p => p.channel !== data.channel), { id: data.user_id, nome: data.user_nome, channel: data.channel }]);
+        if (data.user_id !== profile.id) {
+          setPeersInRoom(prev => [...prev.filter(p => p.channel !== data.channel), { id: data.user_id, nome: data.user_nome || 'Participante', channel: data.channel }]);
+        }
       } else if (data.type === 'peer-left') {
         setPeersInRoom(prev => prev.filter(p => p.id !== data.user_id));
       }
@@ -544,7 +546,7 @@ export function AlunoPanel({ onLogout, userName }: AlunoPanelProps) {
 
       if (data.type === 'room-status') {
         setMyChannel(data.my_channel);
-        setPeersInRoom(data.participants || []);
+        setPeersInRoom((data.participants || []).filter((p: any) => p.id !== profile.id && p.user_id !== profile.id));
         for (const peer of (data.participants || [])) {
           setRemotePeers(prev => [...prev.filter(p => p.channel !== peer.channel),
             { id: peer.user_id, nome: peer.user_nome, channel: peer.channel }]);
@@ -595,6 +597,7 @@ export function AlunoPanel({ onLogout, userName }: AlunoPanelProps) {
     setLoadingCall(false);
     setLocalStream(null);
     setRemotePeers([]);
+    setPeersInRoom([]); // limpa quem estava na chamada ao sair
     setMyChannel('');
     setMicOn(true);
     setCamOn(true);
