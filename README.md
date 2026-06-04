@@ -1,5 +1,10 @@
 # OPI - Observatório de Projetos Integradores
 
+<p align="center">
+  <img src="./imagens/banner opi.png" width="1000">
+</p>
+
+
 Sistema web institucional desenvolvido para centralizar o ciclo de vida dos Projetos Integradores do SENAC Pernambuco, da submissão e acompanhamento pelos alunos até a avaliação por rubrica, publicação em feed social, comunicação em grupo e vitrine de projetos para empresas parceiras.
 
 > Versão documentada: 2.0 / v6.0 - 2º Entregável - Sistema completo entregue e publicado.
@@ -428,6 +433,10 @@ O OPI está documentado como sistema completo no 2º Entregável. A versão v6.0
 # English Version
 
 # OPI - Integrative Projects Observatory
+
+<p align="center">
+  <img src="./imagens/banner opi.png" width="1000">
+</p>
 
 Institutional web system developed to centralize the full lifecycle of SENAC Pernambuco Integrative Projects, from student submission and tracking to rubric-based evaluation, social feed publication, group communication and a project showcase for partner companies.
 
