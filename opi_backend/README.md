@@ -2,6 +2,8 @@
 
 Backend REST API do OPI desenvolvido com **Python + Django + Django REST Framework**.
 
+Responsável: Kennedy Veras
+
 ---
 
 ## Estrutura do Projeto
