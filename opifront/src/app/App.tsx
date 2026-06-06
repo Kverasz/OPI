@@ -423,29 +423,7 @@ function AppContent() {
               </button>
             </form>
 
-            <div className="mt-6 pt-6 border-t border-border space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div className="p-4 rounded-lg" style={{ backgroundColor: '#E6F2FF', borderLeft: '4px solid #003D7A' }}>
-                  <p className="text-xs font-medium mb-2" style={{ color: '#003D7A' }}>Aluno:</p>
-                  <p className="text-xs text-muted-foreground">E-mail: <span className="font-medium">aluno@senac.edu.br</span></p>
-                  <p className="text-xs text-muted-foreground">Senha: <span className="font-medium">senac2026</span></p>
-                </div>
-                <div className="p-4 rounded-lg" style={{ backgroundColor: '#FFF4ED', borderLeft: '4px solid #FF6B00' }}>
-                  <p className="text-xs font-medium mb-2" style={{ color: '#FF6B00' }}>Coordenador:</p>
-                  <p className="text-xs text-muted-foreground">E-mail: <span className="font-medium">coordenador@senac.edu.br</span></p>
-                  <p className="text-xs text-muted-foreground">Senha: <span className="font-medium">coord2026</span></p>
-                </div>
-                <div className="p-4 rounded-lg" style={{ backgroundColor: '#E8F5E9', borderLeft: '4px solid #5CB85C' }}>
-                  <p className="text-xs font-medium mb-2" style={{ color: '#5CB85C' }}>Professor:</p>
-                  <p className="text-xs text-muted-foreground">E-mail: <span className="font-medium">carlos.mendes@senac.edu.br</span></p>
-                  <p className="text-xs text-muted-foreground">Senha: <span className="font-medium">prof2026</span></p>
-                </div>
-                <div className="p-4 rounded-lg" style={{ backgroundColor: '#FFF9E6', borderLeft: '4px solid #D4A017' }}>
-                  <p className="text-xs font-medium mb-2" style={{ color: '#D4A017' }}>Empresa:</p>
-                  <p className="text-xs text-muted-foreground">E-mail: <span className="font-medium">contato@techsolutions.com</span></p>
-                  <p className="text-xs text-muted-foreground">Senha: <span className="font-medium">empresa2026</span></p>
-                </div>
-              </div>
+            <div className="mt-6 pt-6 border-t border-border">
               <p className="text-xs text-center text-muted-foreground">
                 Não possui acesso ou esqueceu sua senha? Entre em contato com o <span className="font-medium" style={{ color: '#FF6B00' }}>Coordenador</span> para assistência.
               </p>
