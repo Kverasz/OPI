@@ -7,6 +7,11 @@
 
 Sistema web institucional desenvolvido para centralizar o ciclo de vida dos Projetos Integradores do SENAC Pernambuco, da submissão e acompanhamento pelos alunos até a avaliação por rubrica, publicação em feed social, comunicação em grupo e vitrine de projetos para empresas parceiras.
 
+[![Institution](https://img.shields.io/badge/Institution-Senac%20Pernambuco-blue)](https://www.senac.br/)
+[![Frontend](https://img.shields.io/badge/Frontend-React%20%2B%20TypeScript-61DAFB)](./opifront)
+[![Backend](https://img.shields.io/badge/Backend-Django%20REST%20Framework-092E20)](./opi_backend)
+[![Compliance](https://img.shields.io/badge/Compliance-LGPD%20Aware-blueviolet)](https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm)
+
 > Versão documentada: 2.0 / v6.0 - 2º Entregável - Sistema completo entregue e publicado.
 
 ## Links
@@ -428,19 +433,29 @@ O OPI está documentado como sistema completo no 2º Entregável. A versão v6.0
 - Suporte a API REST, WebSockets, upload de arquivos, feed social e videochamada WebRTC.
 - Deploy separado em Railway e Vercel.
 
+## Equipe:
+
+- Kennedy Veras. Backend & Privacy Architecture Specialist & Scrum Master [![GitHub](https://img.shields.io/badge/GitHub-%23121011.svg?logo=github&logoColor=white)](https://github.com/Kverasz) [![LinkedIn](https://custom-icon-badges.demolab.com/badge/LinkedIn-0A66C2?logo=linkedin-white&logoColor=fff)](https://www.linkedin.com/in/kennedy-de-lima-veras-48366b2b4/)
+- Ericha Barbosa. Frontend Developer & Product Owner [![GitHub](https://img.shields.io/badge/GitHub-%23121011.svg?logo=github&logoColor=white)](https://github.com/eritsb) [![LinkedIn](https://custom-icon-badges.demolab.com/badge/LinkedIn-0A66C2?logo=linkedin-white&logoColor=fff)](https://www.linkedin.com/in/ericha-barbosa-092473292/)
+- João Guilherme. UI/UX [![GitHub](https://img.shields.io/badge/GitHub-%23121011.svg?logo=github&logoColor=white)](https://github.com/JGOliveiraQ) [![LinkedIn](https://custom-icon-badges.demolab.com/badge/LinkedIn-0A66C2?logo=linkedin-white&logoColor=fff)](https://www.linkedin.com/in/joaoguilhermeo/)
+- Flávio Gonçalves.  UI/UX [![GitHub](https://img.shields.io/badge/GitHub-%23121011.svg?logo=github&logoColor=white)](https://github.com/flavinhogs) [![LinkedIn](https://custom-icon-badges.demolab.com/badge/LinkedIn-0A66C2?logo=linkedin-white&logoColor=fff)](https://www.linkedin.com/in/fl%C3%A1vio-gon%C3%A7alves-961892208/)
+
 ---
 
 # English Version
 
-# OPI - Integrative Projects Observatory
+﻿# OPI: Integrative Projects Observatory
 
 <p align="center">
   <img src="./imagens/banner opi.png" width="1000">
 </p>
 
-Institutional web system developed to centralize the full lifecycle of SENAC Pernambuco Integrative Projects, from student submission and tracking to rubric-based evaluation, social feed publication, group communication and a project showcase for partner companies.
+> A web platform designed to centralize the submission, evaluation, communication and public showcase of Integrative Projects at SENAC Pernambuco. Developed as a Capstone Project for the **Systems Analysis and Development Program** at **Senac College**.
 
-> Documented version: 2.0 / v6.0 - 2nd Delivery - Complete delivered and published system.
+[![Institution](https://img.shields.io/badge/Institution-Senac%20Pernambuco-blue)](https://www.senac.br/)
+[![Frontend](https://img.shields.io/badge/Frontend-React%20%2B%20TypeScript-61DAFB)](./opifront)
+[![Backend](https://img.shields.io/badge/Backend-Django%20REST%20Framework-092E20)](./opi_backend)
+[![Compliance](https://img.shields.io/badge/Compliance-LGPD%20Aware-blueviolet)](https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm)
 
 ## Links
 
@@ -452,13 +467,23 @@ Institutional web system developed to centralize the full lifecycle of SENAC Per
 | Institution | SENAC Pernambuco - Fecomercio / Sesc |
 | Course | Systems Analysis and Development - 2nd Module |
 
-## Overview
+## Project Overview
 
-Before OPI, Integrative Project submissions were handled in a decentralized way through e-mail, Microsoft Teams and external applications. This workflow made version control, evaluation traceability, class/shift organization and long-term preservation of projects as an academic portfolio difficult.
+**OPI - Integrative Projects Observatory** is an institutional web system created to solve a recurring academic management problem: Integrative Project deliveries were previously spread across e-mail, Microsoft Teams and external communication tools. This made it difficult to control project versions, trace evaluations, organize submissions by class and preserve student work as an academic portfolio.
 
-OPI solves this problem with a single responsive platform organized by user roles. The application has a React frontend hosted on Vercel, a Django REST Framework backend published on Railway, PostgreSQL database, JWT authentication, WebSockets for chat and WebRTC signaling for video calls.
+The platform brings this workflow into a single role-based environment. Students submit and manage projects, teachers evaluate them through a structured rubric, coordinators manage users/classes/groups, and partner companies access a curated portfolio of evaluated projects and student profiles.
 
-## Access Profiles
+### Key Features
+
+- **Role-based dashboards:** Dedicated interfaces for Student, Teacher, Coordinator and Partner Company profiles.
+- **Project lifecycle management:** Project CRUD, group links, file uploads, version history, status tracking and evaluation visibility.
+- **Rubric-based assessment:** Teachers and coordinators can evaluate projects using criteria stored in the database, with general feedback and rubric signature.
+- **Public portfolio:** Partner companies can browse evaluated projects and student profiles, respecting LGPD consent rules.
+- **Social feed:** Projects can be selectively published by groups and ranked by likes.
+- **Real-time collaboration:** Group chat with message history, file attachments, unread badges and WebRTC video calls.
+- **Session persistence:** JWT authentication with access/refresh tokens stored on the frontend.
+
+### User Profiles
 
 | Profile | Role in the System |
 |---|---|
@@ -467,7 +492,7 @@ OPI solves this problem with a single responsive platform organized by user role
 | Coordinator | Manages users, classes, groups and projects, tracks indicators, evaluates projects directly and reverts evaluations when necessary. |
 | Partner Company | Consults the public portfolio, filters evaluated projects and views student profiles with LGPD consent. |
 
-## Features
+## Main Modules and Features
 
 ### Authentication and Session
 
@@ -531,7 +556,21 @@ OPI solves this problem with a single responsive platform organized by user role
 - Camera and microphone toggle.
 - WebRTC signaling through WebSocket in the backend itself.
 
-## Technologies
+## LGPD & Data Privacy Compliance
+
+Because OPI handles academic records, user profiles and optional public portfolio data, privacy and access control are part of the project requirements. The system follows LGPD-oriented practices, especially for consent, purpose limitation and role-based visibility.
+
+### Implemented Privacy Standards
+
+- **Purpose limitation:** User data is used for authentication, academic project management, evaluation tracking, collaboration and portfolio display.
+- **Role-based access control:** Students, teachers, coordinators and partner companies see different data according to their permissions.
+- **Consent-aware portfolio:** Optional profile data such as photo, skills and "about me" information is exposed in the portfolio only when the student grants consent.
+- **Secure passwords:** Passwords are stored with Django's secure hashing mechanism (`PBKDF2 + SHA256`).
+- **JWT authentication:** API requests use Bearer tokens, and private WebSocket routes validate authenticated users.
+- **Legal transparency:** The frontend includes Terms of Use and Privacy Policy pages.
+- **Restricted chat/video access:** Group chat and WebRTC signaling are available only to authenticated group members.
+
+## Tech Stack
 
 | Layer | Technologies |
 |---|---|
@@ -545,7 +584,7 @@ OPI solves this problem with a single responsive platform organized by user role
 | Deployment | Vercel for frontend, Railway for backend and PostgreSQL |
 | Management | Git, GitHub, Notion, Figma |
 
-## Architecture
+## System Architecture
 
 ```text
 User
@@ -663,7 +702,9 @@ OPI/
 | RN-13 | Feed publication is selective and can be performed by group members. |
 | RN-14 | Teachers evaluate only projects from classes to which they are linked. |
 
-## How to Run Locally
+## Getting Started (Local Development)
+
+Follow these steps to run the full project environment locally.
 
 ### Prerequisites
 
@@ -673,14 +714,14 @@ OPI/
 - PostgreSQL 14+
 - Git
 
-### 1. Clone the repository
+### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/Kverasz/OPI.git
 cd OPI
 ```
 
-### 2. Configure the backend
+### 2. Configure the Backend
 
 ```powershell
 cd opi_backend
@@ -716,7 +757,7 @@ Local backend:
 http://127.0.0.1:8000
 ```
 
-### 3. Configure the frontend
+### 3. Configure the Frontend
 
 In another terminal:
 
@@ -773,38 +814,38 @@ npm run build
 | `VITE_API_URL` | REST API base URL. Example: `https://your-backend.up.railway.app/api`. |
 | `VITE_WS_URL` | WebSocket base URL. Example: `wss://your-backend.up.railway.app`. |
 
-## Main Endpoints
+## Core API Endpoints
 
-| Method | Endpoint | Description |
+| Method | Endpoint | Description | Access Scope |
+|---|---|---|---|
+| `POST` | `/api/auth/login/` | Authenticates the user and returns JWT tokens. | Public |
+| `POST` | `/api/auth/logout/` | Logs out the authenticated user. | Authenticated users |
+| `POST` | `/api/auth/refresh/` | Refreshes the access token. | Authenticated users |
+| `GET/PATCH` | `/api/auth/me/` | Reads or updates the logged-in user's profile. | Authenticated users |
+| `GET/POST` | `/api/usuarios/` | Lists or creates users. | Coordinator |
+| `GET/POST` | `/api/turmas/` | Lists or creates classes. | Authenticated users / Coordinator |
+| `GET/POST` | `/api/grupos/` | Lists or creates project groups. | Authenticated users / Coordinator |
+| `GET/POST` | `/api/projetos/` | Lists or submits projects. | Role-based |
+| `POST` | `/api/projetos/{id}/publicar_feed/` | Publishes a project to the social feed. | Group members |
+| `GET` | `/api/projetos/{id}/historico/` | Returns project version history. | Authorized users |
+| `GET` | `/api/portfolio/` | Lists evaluated projects for the public portfolio. | Partner Company / authorized users |
+| `GET` | `/api/dashboard/` | Returns coordinator indicators. | Coordinator |
+| `GET/POST` | `/api/avaliacoes/` | Lists or creates evaluations. | Teacher / Coordinator |
+| `POST` | `/api/avaliacoes/iniciar/{projeto_id}/` | Reserves a project for evaluation. | Teacher / Coordinator |
+| `POST` | `/api/avaliacoes/liberar/{projeto_id}/` | Releases a project under evaluation. | Teacher / Coordinator |
+| `GET` | `/api/feed/` | Returns feed projects sorted by likes. | Authenticated users |
+| `POST` | `/api/feed/{projeto_id}/curtir/` | Likes or unlikes a project. | Authenticated users |
+| `GET` | `/api/chat-grupo/{grupo_id}/` | Returns group chat history. | Group members |
+| `POST` | `/api/chat-grupo/{grupo_id}/mensagens/` | Sends a message or file to a group chat. | Group members |
+
+## WebSocket Routes
+
+| Route | Purpose | Access Scope |
 |---|---|---|
-| `POST` | `/api/auth/login/` | Login and JWT token issuing. |
-| `POST` | `/api/auth/logout/` | Logout. |
-| `POST` | `/api/auth/refresh/` | Access token renewal. |
-| `GET/PATCH` | `/api/auth/me/` | View and update the logged-in profile. |
-| `GET/POST` | `/api/usuarios/` | User listing and creation. |
-| `GET/POST` | `/api/turmas/` | Class listing and creation. |
-| `GET/POST` | `/api/grupos/` | Group listing and creation. |
-| `GET/POST` | `/api/projetos/` | Project listing and submission. |
-| `POST` | `/api/projetos/{id}/publicar_feed/` | Publishes a project in the social feed. |
-| `GET` | `/api/projetos/{id}/historico/` | Project version history. |
-| `GET` | `/api/portfolio/` | Public portfolio of evaluated projects. |
-| `GET` | `/api/dashboard/` | Coordinator indicators. |
-| `GET/POST` | `/api/avaliacoes/` | Evaluation listing and registration. |
-| `POST` | `/api/avaliacoes/iniciar/{projeto_id}/` | Reserves a project for evaluation. |
-| `POST` | `/api/avaliacoes/liberar/{projeto_id}/` | Releases a project under evaluation. |
-| `GET` | `/api/feed/` | Social feed sorted by likes. |
-| `POST` | `/api/feed/{projeto_id}/curtir/` | Like or unlike a project. |
-| `GET` | `/api/chat-grupo/{grupo_id}/` | Group chat history. |
-| `POST` | `/api/chat-grupo/{grupo_id}/mensagens/` | Sends a message or file. |
+| `/ws/chat-grupo/{grupo_id}/?token={jwt}` | Real-time group chat. | Authenticated group members |
+| `/ws/video-grupo/{grupo_id}/?token={jwt}` | WebRTC signaling for video calls. | Authenticated group members |
 
-## WebSockets
-
-| Route | Usage |
-|---|---|
-| `/ws/chat-grupo/{grupo_id}/?token={jwt}` | Real-time group chat. |
-| `/ws/video-grupo/{grupo_id}/?token={jwt}` | WebRTC signaling for video calls. |
-
-## Deployment
+## Deployment Notes
 
 ### Frontend - Vercel
 
@@ -840,15 +881,16 @@ web: mkdir -p media/chat_arquivos && python manage.py collectstatic --noinput &&
 | Dark gray | `#1E293B` | Main text. |
 | Medium gray | `#64748B` | Secondary text and placeholders. |
 
-## LGPD and Security
+## Future Improvements
 
-- Passwords stored with Django secure hash (`PBKDF2 + SHA256`).
-- Session via JWT, with access and refresh tokens.
-- Access control by profile.
-- Privacy policy and terms of use in the frontend.
-- Optional profile data used with consent.
-- Exposure of photo and skills in the portfolio conditioned by LGPD consent.
-- WebSockets authenticated by JWT token and restricted to group members.
+If the project evolves in future semesters, the next improvements may include:
+
+- **Redis channel layer:** Replace the in-memory channel layer to improve WebSocket scalability.
+- **Advanced reports:** Export institutional reports by class, course, concept and evaluator.
+- **Automated tests:** Add backend API tests and frontend component/integration tests.
+- **Notification center:** Expand notifications for evaluation updates, chat activity and project status changes.
+- **Portfolio analytics:** Add metrics for project views, company interest and student profile engagement.
+- **Cloud media storage:** Move chat files and profile images to a dedicated storage service.
 
 ## Project Status
 
@@ -860,3 +902,27 @@ OPI is documented as a complete delivered system for the 2nd Delivery. Version v
 - Backend with 4 Django apps: `usuarios`, `projetos`, `avaliacoes` and `feed`.
 - Support for REST API, WebSockets, file upload, social feed and WebRTC video calls.
 - Separate deployment on Railway and Vercel.
+
+## Authors & Project Team
+
+- Kennedy Veras. Backend & Privacy Architecture Specialist & Scrum Master [![GitHub](https://img.shields.io/badge/GitHub-%23121011.svg?logo=github&logoColor=white)](https://github.com/Kverasz) [![LinkedIn](https://custom-icon-badges.demolab.com/badge/LinkedIn-0A66C2?logo=linkedin-white&logoColor=fff)](https://www.linkedin.com/in/kennedy-de-lima-veras-48366b2b4/)
+- Ericha Barbosa. Frontend Developer & Product Owner [![GitHub](https://img.shields.io/badge/GitHub-%23121011.svg?logo=github&logoColor=white)](https://github.com/eritsb) [![LinkedIn](https://custom-icon-badges.demolab.com/badge/LinkedIn-0A66C2?logo=linkedin-white&logoColor=fff)](https://www.linkedin.com/in/ericha-barbosa-092473292/)
+- João Guilherme. UI/UX [![GitHub](https://img.shields.io/badge/GitHub-%23121011.svg?logo=github&logoColor=white)](https://github.com/JGOliveiraQ) [![LinkedIn](https://custom-icon-badges.demolab.com/badge/LinkedIn-0A66C2?logo=linkedin-white&logoColor=fff)](https://www.linkedin.com/in/joaoguilhermeo/)
+- Flávio Gonçalves.  UI/UX [![GitHub](https://img.shields.io/badge/GitHub-%23121011.svg?logo=github&logoColor=white)](https://github.com/flavinhogs) [![LinkedIn](https://custom-icon-badges.demolab.com/badge/LinkedIn-0A66C2?logo=linkedin-white&logoColor=fff)](https://www.linkedin.com/in/fl%C3%A1vio-gon%C3%A7alves-961892208/)
+- Academic context - Integrative Project / Capstone Project.
+- Project management - Notion, GitHub and Figma.
+- Technical scope - React + TypeScript frontend, Django REST backend, PostgreSQL database, WebSockets and WebRTC.
+
+## Academic Advisor / Professor
+
+Coding: Languages ​​and Techniques & Research, Technology and Society: Prof. Guibson Santana
+
+Tech English Course Professor: Prof. Leonardo Trevas
+
+Database: DQL and DTL: Prof. Heuryk Wylk
+
+Requirements Engineering & Creativity: Prof. Paulo Pimentel
+
+Information Technology Legislation: Prof. Renata Cristina
+
+Extension Units: Back End: Prof. Arnott Ramos
